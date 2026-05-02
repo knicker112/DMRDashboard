@@ -30,7 +30,7 @@ export default function App() {
     if (state.slot2.active && state.slot2.dmrId && !state.slot2.name) {
       void resolveUser(2, state.slot2.dmrId)
     }
-  }, [state.slot1.active, state.slot1.dmrId, state.slot2.active, state.slot2.dmrId])
+  }, [state.slot1.active, state.slot1.dmrId, state.slot1.name, state.slot2.active, state.slot2.dmrId, state.slot2.name, dispatch, fetchUser, lookup])
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 font-mono">
