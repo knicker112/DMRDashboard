@@ -1,8 +1,10 @@
 import { useEffect, useReducer } from 'react'
+import { io, Socket } from 'socket.io-client'
 import type { BrandmeisterEvent, DashboardState, SlotState, HistoryEntry } from '../types'
 
 const HISTORY_MAX = 20
-const BM_WS_URL = 'wss://api.brandmeister.network/lh'
+const BM_URL = 'https://api.brandmeister.network'
+const BM_PATH = '/lh'
 
 const emptySlot: SlotState = {
   active: false,
@@ -42,13 +44,11 @@ function reducer(state: DashboardState, action: Action): DashboardState {
         ...state,
         [slotKey]: {
           active: true,
-          dmrId: action.event.RadioID,
-          callsign: action.event.Callsign,
-          name: null,
-          location: action.event.City && action.event.Country
-            ? `${action.event.City}, ${action.event.Country}`
-            : action.event.Country || null,
-          talkgroup: action.event.TargetID,
+          dmrId: action.event.SourceID,
+          callsign: action.event.SourceCall || null,
+          name: action.event.SourceName || null,
+          location: null,
+          talkgroup: action.event.DestinationID,
           startedAt: new Date(action.event.Start * 1000),
         } satisfies SlotState,
       }
@@ -57,17 +57,19 @@ function reducer(state: DashboardState, action: Action): DashboardState {
     case 'CALL_END': {
       const slotKey = action.slot === 1 ? 'slot1' : 'slot2'
       const currentSlot = state[slotKey]
-      if (!currentSlot.active || !currentSlot.callsign) return state
+
+      const callsign = currentSlot.callsign ?? action.event.SourceCall
+      if (!callsign) return state
 
       const entry: HistoryEntry = {
-        id: `${action.event.RadioID}-${action.event.Stop}`,
-        callsign: currentSlot.callsign,
-        name: currentSlot.name,
+        id: `${action.event.SourceID}-${action.event.Stop || action.event.Start}`,
+        callsign,
+        name: currentSlot.name ?? (action.event.SourceName || null),
         location: currentSlot.location,
-        talkgroup: action.event.TargetID,
+        talkgroup: action.event.DestinationID,
         slot: action.slot,
         startedAt: currentSlot.startedAt ?? new Date(action.event.Start * 1000),
-        endedAt: new Date(action.event.Stop * 1000),
+        endedAt: new Date((action.event.Stop || action.event.Start) * 1000),
       }
 
       return {
@@ -94,32 +96,38 @@ export function useBrandmeister(hotspotId: string) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
-    const ws = new WebSocket(`${BM_WS_URL}?id=${hotspotId}`)
+    const socket: Socket = io(BM_URL, {
+      path: BM_PATH,
+      transports: ['websocket'],
+    })
 
-    ws.onopen = () => dispatch({ type: 'CONNECTED' })
-    ws.onclose = () => dispatch({ type: 'DISCONNECTED' })
-    ws.onerror = () => dispatch({ type: 'DISCONNECTED' })
+    socket.on('connect', () => dispatch({ type: 'CONNECTED' }))
+    socket.on('disconnect', () => dispatch({ type: 'DISCONNECTED' }))
+    socket.on('connect_error', () => dispatch({ type: 'DISCONNECTED' }))
 
-    ws.onmessage = (event: MessageEvent<string>) => {
+    socket.on('mqtt', (data: { topic: string; payload: string }) => {
+      if (data.topic !== 'LH') return
+
       let bm: BrandmeisterEvent
       try {
-        bm = JSON.parse(event.data) as BrandmeisterEvent
+        bm = JSON.parse(data.payload) as BrandmeisterEvent
       } catch {
         return
       }
 
-      if (bm.Event !== 'Session') return
+      // Nur Events für unseren Hotspot verarbeiten
+      if (bm.ContextID !== Number(hotspotId)) return
 
       const slot: 1 | 2 = bm.Slot === 0 ? 1 : 2
 
-      if (bm.Stop === 0) {
+      if (bm.Event === 'Session-Start') {
         dispatch({ type: 'CALL_START', slot, event: bm })
-      } else {
+      } else if (bm.Event === 'Session-Stop') {
         dispatch({ type: 'CALL_END', slot, event: bm })
       }
-    }
+    })
 
-    return () => ws.close()
+    return () => { socket.disconnect() }
   }, [hotspotId])
 
   return { state, dispatch }

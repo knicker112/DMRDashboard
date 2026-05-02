@@ -27,17 +27,19 @@ export interface DashboardState {
 }
 
 export interface BrandmeisterEvent {
-  Event: string
-  Stop: number
-  RadioID: number
-  Callsign: string
-  TargetID: number
-  TargetName: string
+  Event: 'Session-Start' | 'Session-Stop'
+  SessionID: string
+  ContextID: number
+  SourceID: number
+  SourceCall: string
+  SourceName: string
+  DestinationID: number
+  DestinationCall: string
   Slot: number
-  City: string
-  Country: string
   Start: number
-  SessionID?: string
+  Stop: number
+  TalkerAlias: string
+  LinkTypeName: string
 }
 
 export interface RadioIdUser {
