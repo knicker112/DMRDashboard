@@ -25,7 +25,7 @@ describe('useRadioId', () => {
         country: 'Germany',
       }],
     }
-    vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     } as Response)
@@ -58,7 +58,7 @@ describe('useRadioId', () => {
   it('ruft fetch nicht erneut auf wenn ID bereits im Cache ist', async () => {
     const cached = { id: 9999, callsign: 'DO2ABC', fname: 'Anna', surname: 'Test', city: 'Berlin', country: 'Germany' }
     sessionStorage.setItem('radioid_9999', JSON.stringify(cached))
-    const fetchSpy = vi.spyOn(global, 'fetch')
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
     const { result } = renderHook(() => useRadioId())
     await act(async () => {

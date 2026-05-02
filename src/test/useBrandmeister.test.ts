@@ -10,7 +10,7 @@ class MockWebSocket {
   onclose: (() => void) | null = null
   onopen: (() => void) | null = null
   onerror: ((e: Event) => void) | null = null
-  readyState = WebSocket.CONNECTING
+  readyState: number = WebSocket.CONNECTING
 
   constructor(url: string) {
     this.url = url
