@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useState } from 'react'
 import type { RadioIdUser } from '../types'
 
 const CACHE_PREFIX = 'radioid_'
@@ -13,25 +13,24 @@ function writeCache(user: RadioIdUser): void {
 }
 
 export function useRadioId() {
-  const memCache = useRef<Map<number, RadioIdUser>>(new Map())
-
-  // Beim ersten Aufruf sessionStorage in memCache laden
-  if (memCache.current.size === 0) {
+  const [memCache] = useState<Map<number, RadioIdUser>>(() => {
+    const map = new Map<number, RadioIdUser>()
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i)
       if (key?.startsWith(CACHE_PREFIX)) {
         const user = readCache(Number(key.slice(CACHE_PREFIX.length)))
-        if (user) memCache.current.set(user.id, user)
+        if (user) map.set(user.id, user)
       }
     }
-  }
+    return map
+  })
 
   const lookup = useCallback((dmrId: number): RadioIdUser | null => {
-    return memCache.current.get(dmrId) ?? null
-  }, [])
+    return memCache.get(dmrId) ?? null
+  }, [memCache])
 
   const fetchUser = useCallback(async (dmrId: number): Promise<void> => {
-    if (memCache.current.has(dmrId)) return
+    if (memCache.has(dmrId)) return
 
     try {
       const res = await fetch(`https://www.radioid.net/api/dmr/user/?id=${dmrId}`)
@@ -39,13 +38,13 @@ export function useRadioId() {
       const data = await res.json() as { count: number; results: RadioIdUser[] }
       if (data.count > 0 && data.results[0]) {
         const user = data.results[0]
-        memCache.current.set(dmrId, user)
+        memCache.set(dmrId, user)
         writeCache(user)
       }
     } catch {
       // Netzwerkfehler ignorieren — fehlende Namen sind kein Fehler
     }
-  }, [])
+  }, [memCache])
 
   return { lookup, fetchUser }
 }
