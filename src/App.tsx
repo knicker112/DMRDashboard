@@ -1,73 +1,135 @@
-import { useEffect } from 'react'
-import { useBrandmeister } from './hooks/useBrandmeister'
-import { useRadioId } from './hooks/useRadioId'
-import { SlotCard } from './components/SlotCard'
-import { HistoryRow } from './components/HistoryRow'
+import { useState, useEffect } from 'react'
+import { useConfig } from './hooks/useConfig'
+import { useUpdateCheck } from './hooks/useUpdateCheck'
+import { applyCustomTgNames } from './hooks/useTalkgroups'
+import { HotspotPanel } from './components/HotspotPanel'
+import { StationMap } from './components/StationMap'
+import { SetupScreen } from './components/SetupScreen'
 
-const HOTSPOT_ID = '264474201'
-
-export default function App() {
-  const { state, dispatch } = useBrandmeister(HOTSPOT_ID)
-  const { lookup, fetchUser } = useRadioId()
-
+function useClock() {
+  const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    async function resolveUser(slot: 1 | 2, dmrId: number) {
-      await fetchUser(dmrId)
-      const user = lookup(dmrId)
-      if (user) {
-        dispatch({
-          type: 'SET_USER',
-          slot,
-          name: `${user.fname} ${user.surname}`.trim(),
-          location: user.city && user.country ? `${user.city}, ${user.country}` : user.country,
-        })
-      }
-    }
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  return now
+}
 
-    if (state.slot1.active && state.slot1.dmrId && !state.slot1.name) {
-      void resolveUser(1, state.slot1.dmrId)
-    }
-    if (state.slot2.active && state.slot2.dmrId && !state.slot2.name) {
-      void resolveUser(2, state.slot2.dmrId)
-    }
-  }, [state.slot1.active, state.slot1.dmrId, state.slot1.name, state.slot2.active, state.slot2.dmrId, state.slot2.name, dispatch, fetchUser, lookup])
+function ClockDisplay() {
+  const now = useClock()
+  const fmt = (tz: string) =>
+    now.toLocaleTimeString('de-DE', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const utc = fmt('UTC')
+  const cet = fmt('Europe/Berlin')
+  const cetLabel = now.toLocaleDateString('en-US', { timeZone: 'Europe/Berlin', timeZoneName: 'short' })
+    .split(', ')[1] ?? 'CET'
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 font-mono">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${state.connected ? 'bg-green-500' : 'bg-red-500'}`} />
-            <h1 className="text-sky-400 text-sm font-bold tracking-widest">
-              DMR HOTSPOT · {HOTSPOT_ID}
-            </h1>
+    <div className="flex items-end gap-6">
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-2xl font-bold font-mono text-slate-100 tabular-nums tracking-wider">{utc}</span>
+        <span className="text-xs text-slate-500 font-bold tracking-widest mt-0.5">UTC</span>
+      </div>
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-2xl font-bold font-mono text-slate-300 tabular-nums tracking-wider">{cet}</span>
+        <span className="text-xs text-slate-500 font-bold tracking-widest mt-0.5">{cetLabel}</span>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const { config, saveConfig } = useConfig()
+  const [showSettings, setShowSettings] = useState(false)
+
+  useEffect(() => {
+    if (config?.customTgNames) applyCustomTgNames(config.customTgNames)
+  }, [config?.customTgNames])
+
+  if (!config) {
+    return <SetupScreen onSave={cfg => saveConfig(cfg)} />
+  }
+
+  if (showSettings) {
+    return (
+      <SetupScreen
+        initial={config}
+        onSave={cfg => { saveConfig(cfg); setShowSettings(false) }}
+        onCancel={() => setShowSettings(false)}
+      />
+    )
+  }
+
+  return <Dashboard config={config} onOpenSettings={() => setShowSettings(true)} />
+}
+
+function Dashboard({ config, onOpenSettings }: {
+  config: NonNullable<ReturnType<typeof useConfig>['config']>
+  onOpenSettings: () => void
+}) {
+  const updateInfo = useUpdateCheck()
+
+  return (
+    <div className="min-h-screen bg-slate-950 p-6 font-mono">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-sky-400 text-xl font-bold tracking-widest">
+            Brandmeister Dashboard · {config.callsign}
+          </h1>
+          <div className="flex items-center gap-6">
+            <ClockDisplay />
+            <button
+              onClick={onOpenSettings}
+              title="Einstellungen"
+              className="text-slate-500 hover:text-slate-300 transition-colors text-lg"
+            >
+              ⚙
+            </button>
           </div>
-          <span className="text-xs text-slate-600">
-            {state.connected ? 'VERBUNDEN' : 'GETRENNT'}
-          </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <SlotCard slot={1} state={state.slot1} />
-          <SlotCard slot={2} state={state.slot2} />
-        </div>
+        {/* Update-Banner */}
+        {updateInfo?.hasUpdate && (
+          <a
+            href={updateInfo.releaseUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 bg-sky-900/60 border border-sky-600 text-sky-300 text-sm font-bold px-4 py-2 rounded-lg mb-6 hover:bg-sky-800/60 transition-colors"
+          >
+            <span>↑</span>
+            <span>Version {updateInfo.latestVersion} verfügbar — Jetzt aktualisieren</span>
+          </a>
+        )}
 
-        {state.history.length > 0 && (
-          <div className="bg-slate-900 rounded-lg p-3">
-            <div className="text-xs text-slate-600 font-medium tracking-widest mb-2">
-              LETZTE AKTIVITÄT
+        {/* Ein Panel pro Hotspot */}
+        {(() => {
+          const n = config.hotspots.length
+          const grid = n === 1 ? '' : n === 2 ? 'grid grid-cols-2 gap-6' : 'grid grid-cols-3 gap-4'
+          return (
+            <div className={grid}>
+              {config.hotspots.map((hotspot, idx) => (
+                <HotspotPanel
+                  key={hotspot.id}
+                  hotspot={hotspot}
+                  config={config}
+                  hotspotIndex={idx}
+                  compact={n > 1}
+                />
+              ))}
             </div>
-            {state.history.map((entry) => (
-              <HistoryRow key={entry.id} entry={entry} />
-            ))}
-          </div>
-        )}
+          )
+        })()}
 
-        {!state.connected && (
-          <div className="text-center text-slate-600 text-xs mt-8">
-            Verbinde mit BrandMeister…
-          </div>
-        )}
+        {/* Gemeinsame Karte für alle Hotspots */}
+        <StationMap
+          stations={[]}
+          homeLat={config.lat}
+          homeLng={config.lng}
+          homeCallsign={config.callsign}
+        />
+
       </div>
     </div>
   )

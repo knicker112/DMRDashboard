@@ -5,28 +5,38 @@ import type { SlotState } from '../types'
 
 const idleSlot: SlotState = {
   active: false,
+  direction: null,
+  callType: null,
   dmrId: null,
   callsign: null,
   name: null,
   location: null,
   talkgroup: null,
+  talkgroupName: null,
+  destName: null,
+  destRidCity: null,
   startedAt: null,
 }
 
 const activeSlot: SlotState = {
   active: true,
+  direction: 'rx',
+  callType: 'group',
   dmrId: 2641234,
   callsign: 'DL1XYZ',
   name: 'Max Mustermann',
   location: 'München, Germany',
   talkgroup: 262,
+  talkgroupName: 'Germany',
+  destName: null,
+  destRidCity: null,
   startedAt: new Date('2026-05-01T12:00:00'),
 }
 
 describe('SlotCard', () => {
-  it('zeigt "leer" wenn Slot inaktiv ist', () => {
+  it('zeigt "—" wenn Slot inaktiv ist', () => {
     render(<SlotCard slot={1} state={idleSlot} />)
-    expect(screen.getByText(/leer/i)).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
   })
 
   it('zeigt Rufzeichen wenn Slot aktiv ist', () => {

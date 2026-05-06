@@ -9,22 +9,31 @@ function formatTime(date: Date): string {
 }
 
 export function HistoryRow({ entry }: HistoryRowProps) {
+  const isPrivate = entry.callType === 'private'
+
+  const destination = isPrivate
+    ? (entry.talkgroupName ?? `DMR ${entry.talkgroup}`)
+    : (entry.talkgroupName ?? `TG ${entry.talkgroup}`)
+
   return (
-    <div className="flex items-center justify-between py-1 border-b border-slate-800 last:border-0 text-sm">
-      <div className="flex items-center gap-3 min-w-0">
-        <span className="text-slate-400 font-medium shrink-0 text-xs">
+    <div className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+      <div className="flex items-center gap-4 min-w-0">
+        <span className="text-slate-400 font-bold shrink-0 text-base">
           TS{entry.slot}
         </span>
-        <span className="text-slate-200 font-bold shrink-0">{entry.callsign}</span>
+        <span className="text-white font-bold shrink-0 text-lg tracking-wide">{entry.callsign}</span>
+        <span className="text-slate-500 shrink-0">→</span>
+        <span className={`shrink-0 text-base font-semibold ${isPrivate ? 'text-sky-300' : 'text-amber-300'}`}>
+          {destination}
+        </span>
         {entry.name && (
-          <span className="text-slate-400 truncate hidden sm:block">{entry.name}</span>
+          <span className="text-slate-300 truncate text-base">{entry.name}</span>
         )}
-        <span className="text-amber-400 shrink-0">TG {entry.talkgroup}</span>
         {entry.location && (
-          <span className="text-slate-500 truncate hidden md:block">{entry.location}</span>
+          <span className="text-slate-400 truncate text-base">{entry.location}</span>
         )}
       </div>
-      <span className="text-slate-600 text-xs shrink-0 ml-2">{formatTime(entry.endedAt)}</span>
+      <span className="text-slate-400 text-sm shrink-0 ml-4">{formatTime(entry.endedAt)}</span>
     </div>
   )
 }

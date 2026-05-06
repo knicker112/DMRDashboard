@@ -13,6 +13,8 @@ dist-ssr
 *.local
 .superpowers/
 
+release/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

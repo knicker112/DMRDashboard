@@ -6,3 +6,19 @@ body {
   color: #f1f5f9;
   margin: 0;
 }
+
+.input {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: #f1f5f9;
+  font-family: inherit;
+  font-size: 0.875rem;
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+}
+.input:focus {
+  border-color: #38bdf8;
+}
