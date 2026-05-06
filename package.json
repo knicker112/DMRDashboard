@@ -16,9 +16,9 @@
     "update-radioid": "node scripts/fetch-radioid.mjs",
     "update-talkgroups": "node scripts/fetch-talkgroups.mjs",
     "electron:dev": "vite build && electron .",
-    "electron:build:linux": "vite build && electron-builder --linux AppImage",
-    "electron:build:win": "vite build && electron-builder --win nsis",
-    "electron:build:all": "vite build && electron-builder --linux AppImage --win nsis"
+    "electron:build:linux": "vite build && electron-builder --linux AppImage --publish never",
+    "electron:build:win": "vite build && electron-builder --win nsis --publish never",
+    "electron:build:all": "vite build && electron-builder --linux AppImage --win nsis --publish never"
   },
   "build": {
     "appId": "de.knicker112.dmr-dashboard",
