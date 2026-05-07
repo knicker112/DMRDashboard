@@ -237,7 +237,9 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
         )
       })()}
 
-      <SubscribedTGs talkgroups={subscribedTGs} />
+      <div className="mt-4">
+        <SubscribedTGs talkgroups={subscribedTGs} />
+      </div>
     </div>
 
       {/* Verlauf */}
