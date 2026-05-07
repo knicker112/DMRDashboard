@@ -42,12 +42,21 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerLanguages": ["de_DE", "en_US"],
+      "installerLanguages": [
+        "de_DE",
+        "en_US"
+      ],
       "language": "1031"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "knicker112",
+      "repo": "DMRDashboard"
     }
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",
+    "electron-updater": "^6.8.3",
     "leaflet": "^1.9.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

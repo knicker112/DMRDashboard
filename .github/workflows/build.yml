@@ -55,7 +55,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DMR-Dashboard-Windows
-          path: release/*.exe
+          path: |
+            release/*.exe
+            release/latest.yml
 
   release:
     needs: [build-linux, build-windows]
@@ -73,6 +75,7 @@ jobs:
           files: |
             DMR-Dashboard-Linux/*.AppImage
             DMR-Dashboard-Windows/*.exe
+            DMR-Dashboard-Windows/latest.yml
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
