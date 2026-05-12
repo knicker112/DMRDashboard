@@ -9,7 +9,7 @@ export function useCallsigns() {
   const [data, setData] = useState<Record<string, CallsignInfo>>({})
 
   useEffect(() => {
-    fetch('/callsigns.json')
+    fetch('./callsigns.json')
       .then(r => r.json())
       .then((json: { callsigns?: Record<string, CallsignInfo> }) => {
         if (json.callsigns) setData(json.callsigns)

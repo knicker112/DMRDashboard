@@ -14,7 +14,7 @@ async function loadLocalDb() {
   if (localDbLoaded) return
   localDbLoaded = true
   try {
-    const r = await fetch('/radioid.json')
+    const r = await fetch('./radioid.json')
     if (!r.ok) return
     const data: Record<string, LocalEntry> = await r.json()
     for (const [id, e] of Object.entries(data)) {

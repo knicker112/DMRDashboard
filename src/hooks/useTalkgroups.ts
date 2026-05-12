@@ -9,7 +9,7 @@ async function loadLocalDb() {
   if (localDbLoaded) return
   localDbLoaded = true
   try {
-    const r = await fetch('/talkgroups.json')
+    const r = await fetch('./talkgroups.json')
     if (!r.ok) return
     const data: Record<string, string> = await r.json()
     let count = 0
@@ -22,7 +22,7 @@ async function loadLocalDb() {
   }
   // Manuelle Einträge haben Vorrang — nach der Haupt-DB laden
   try {
-    const r = await fetch('/talkgroups-manual.json')
+    const r = await fetch('./talkgroups-manual.json')
     if (!r.ok) return
     const manual: Record<string, string> = await r.json()
     for (const [id, name] of Object.entries(manual)) {
