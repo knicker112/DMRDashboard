@@ -51,9 +51,9 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
       if (!h.id.trim()) { setError('Alle Hotspot-IDs müssen ausgefüllt sein.'); return }
     }
     if (!callsign.trim()) { setError('Rufzeichen ist erforderlich.'); return }
-    const latN = parseFloat(lat)
-    const lngN = parseFloat(lng)
-    if (isNaN(latN) || isNaN(lngN)) { setError('Koordinaten ungültig.'); return }
+    const latN = lat.trim() ? parseFloat(lat) : 0
+    const lngN = lng.trim() ? parseFloat(lng) : 0
+    if ((lat.trim() || lng.trim()) && (isNaN(latN) || isNaN(lngN))) { setError('Koordinaten ungültig.'); return }
     const customTgNames: Record<string, string> = {}
     for (const row of tgRows) {
       const id = row.id.trim()
@@ -166,10 +166,10 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
                 />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Breitengrad" hint="Dezimalgrad">
+                <Field label="Breitengrad" hint="Optional — für Kartenansicht">
                   <input className="input" value={lat} onChange={e => setLat(e.target.value)} placeholder="51.0268" inputMode="decimal" />
                 </Field>
-                <Field label="Längengrad" hint="Dezimalgrad">
+                <Field label="Längengrad" hint="Optional — für Kartenansicht">
                   <input className="input" value={lng} onChange={e => setLng(e.target.value)} placeholder="6.1184" inputMode="decimal" />
                 </Field>
               </div>
