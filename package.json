@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.7",
   "description": "BrandMeister DMR Hotspot Dashboard für Funkamateure",
-  "author": "knicker112",
+  "author": "Christian Schmitz DO2EF",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -21,8 +21,9 @@
     "electron:build:all": "vite build && electron-builder --linux AppImage --win nsis --publish never"
   },
   "build": {
-    "appId": "de.knicker112.dmr-dashboard",
+    "appId": "de.do2ef.dmr-dashboard",
     "productName": "DMR Dashboard",
+    "copyright": "© 2026 Christian Schmitz DO2EF",
     "extraMetadata": {
       "type": "commonjs"
     },

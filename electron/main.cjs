@@ -2,6 +2,14 @@ const { app, BrowserWindow, shell, ipcMain } = require('electron')
 const path = require('path')
 const isDev = !app.isPackaged
 
+app.setAboutPanelOptions({
+  applicationName: 'DMR Dashboard',
+  applicationVersion: app.getVersion(),
+  copyright: '© 2026 Christian Schmitz DO2EF',
+  authors: ['Christian Schmitz DO2EF'],
+  website: 'https://github.com/knicker112/DMRDashboard',
+})
+
 let mainWindow = null
 
 function createWindow() {
