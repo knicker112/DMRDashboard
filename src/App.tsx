@@ -82,6 +82,44 @@ function Dashboard({ config, onOpenSettings }: {
           </h1>
           <div className="flex items-center gap-6">
             <ClockDisplay />
+
+            {/* Update-Status — immer sichtbar im Header */}
+            {electronUpdate.ready ? (
+              <button
+                onClick={() => electronUpdate.install()}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors animate-pulse"
+              >
+                <span>↑</span>
+                <span>v{electronUpdate.version} — Neu starten</span>
+              </button>
+            ) : electronUpdate.downloading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-20 bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-sky-400 h-full transition-all duration-300"
+                    style={{ width: `${electronUpdate.percent}%` }}
+                  />
+                </div>
+                <span className="text-sky-400 text-xs font-bold tabular-nums">
+                  ↓ {Math.round(electronUpdate.percent)}%
+                </span>
+              </div>
+            ) : updateInfo?.hasUpdate ? (
+              <a
+                href={updateInfo.releaseUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 bg-sky-800/60 hover:bg-sky-700/60 border border-sky-600 text-sky-300 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <span>↑</span>
+                <span>v{updateInfo.latestVersion} verfügbar</span>
+              </a>
+            ) : (
+              <span className="text-slate-600 text-xs font-bold tracking-widest">
+                v{__APP_VERSION__}
+              </span>
+            )}
+
             <button
               onClick={onOpenSettings}
               title="Einstellungen"
@@ -91,43 +129,6 @@ function Dashboard({ config, onOpenSettings }: {
             </button>
           </div>
         </div>
-
-        {/* Update-Banner — Electron: Auto-Download; Web: Link zur Release-Seite */}
-        {electronUpdate.ready ? (
-          <div className="flex items-center justify-between bg-emerald-900/60 border border-emerald-600 text-emerald-300 text-sm font-bold px-4 py-2 rounded-lg mb-6">
-            <span>↑ Update bereit — Version {electronUpdate.version}</span>
-            <button
-              onClick={() => electronUpdate.install()}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-md transition-colors"
-            >
-              Jetzt neu starten
-            </button>
-          </div>
-        ) : electronUpdate.downloading ? (
-          <div className="flex items-center gap-3 bg-sky-900/40 border border-sky-700 text-sky-400 text-sm font-bold px-4 py-2 rounded-lg mb-6">
-            <span>↓ Update wird heruntergeladen… {Math.round(electronUpdate.percent)}%</span>
-            <div className="flex-1 bg-sky-900 rounded-full h-1.5 overflow-hidden">
-              <div
-                className="bg-sky-400 h-full transition-all duration-300"
-                style={{ width: `${electronUpdate.percent}%` }}
-              />
-            </div>
-          </div>
-        ) : electronUpdate.available ? (
-          <div className="flex items-center gap-2 bg-sky-900/40 border border-sky-700 text-sky-400 text-sm font-bold px-4 py-2 rounded-lg mb-6">
-            <span>↓ Version {electronUpdate.version} wird heruntergeladen…</span>
-          </div>
-        ) : updateInfo?.hasUpdate ? (
-          <a
-            href={updateInfo.releaseUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 bg-sky-900/60 border border-sky-600 text-sky-300 text-sm font-bold px-4 py-2 rounded-lg mb-6 hover:bg-sky-800/60 transition-colors"
-          >
-            <span>↑</span>
-            <span>Version {updateInfo.latestVersion} verfügbar — Jetzt aktualisieren</span>
-          </a>
-        ) : null}
 
         {/* Ein Panel pro Hotspot */}
         {(() => {
