@@ -3,6 +3,7 @@ import { useBrandmeister } from '../hooks/useBrandmeister'
 import { useRadioId } from '../hooks/useRadioId'
 import { useCallsigns } from '../hooks/useCallsigns'
 import { useSubscribedTGs } from '../hooks/useSubscribedTGs'
+import { useHotspotOnline } from '../hooks/useHotspotOnline'
 import { useAprs } from '../hooks/useAprs'
 import { useReverseGeo } from '../hooks/useReverseGeo'
 import { fetchTgName, lookupTgName, applyCustomTgNames } from '../hooks/useTalkgroups'
@@ -30,6 +31,7 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
   const color = HOTSPOT_COLORS[hotspotIndex % HOTSPOT_COLORS.length]
   const subscribedTGs = useSubscribedTGs(hotspot.id)
   const subscribedTgIds = useMemo(() => new Set(subscribedTGs.map(t => t.talkgroup)), [subscribedTGs])
+  const hotspotOnline = useHotspotOnline(hotspot.id)
 
   // Abonnierte TG-Namen direkt in den TG-Cache laden
   useEffect(() => {
@@ -205,16 +207,24 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
     <div className={`rounded-2xl border-2 p-5 ${color.panel}`}>
       {/* Hotspot-Header */}
       <div className="flex items-center gap-3 mb-4">
-        <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${state.connected ? 'bg-green-500' : 'bg-red-500'}`} />
+        <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${
+          hotspotOnline === true ? 'bg-green-500' :
+          hotspotOnline === false ? 'bg-red-500' :
+          'bg-yellow-500 animate-pulse'
+        }`} />
         <span className={`text-sm font-bold tracking-widest ${color.label}`}>{hotspot.name.toUpperCase()}</span>
         <span className="text-slate-600 text-xs">· ID {hotspot.id}</span>
-        <span className={`ml-auto text-xs font-bold ${state.connected ? 'text-green-400' : 'text-red-400'}`}>
-          {state.connected ? 'VERBUNDEN' : 'GETRENNT'}
+        <span className={`ml-auto text-xs font-bold ${
+          hotspotOnline === true ? 'text-green-400' :
+          hotspotOnline === false ? 'text-red-400' :
+          'text-yellow-500'
+        }`}>
+          {hotspotOnline === true ? 'ONLINE' : hotspotOnline === false ? 'OFFLINE' : 'PRÜFE…'}
         </span>
       </div>
 
       {/* Slot-Cards oder Offline-Zustand */}
-      {!state.connected ? (
+      {hotspotOnline === false ? (
         <div className="flex items-center justify-center py-8 gap-3 text-slate-600">
           <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M3 3l18 18M8.464 8.464A5 5 0 006 12a5 5 0 002.464 3.536M5.636 5.636A9 9 0 003.515 12a9 9 0 002.121 6.364" />
