@@ -227,6 +227,8 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
   const ownDmrIdRef = useRef<number | null>(null)
   // SessionIDs bereits beendeter Rufe — verhindert, dass Session-Update nach Session-Stop den Slot neu aktiviert
   const stoppedSessions = useRef<Set<string>>(new Set())
+  // Timer für verzögertes Slot-Leeren bei Socket-Disconnect (verhindert Flackern bei Kurz-Disconnects)
+  const disconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Aus TX-Events gelernte TG-IDs — persistiert in localStorage, deckt dynamische TG-Nutzung ab
   const learnedTgKey = `dmr-learned-tgs-${hotspotId}`
   const learnedTgIds = useRef<Set<number>>(new Set(
@@ -240,14 +242,25 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
     })
 
     socket.on('connect', () => {
+      // Disconnect-Timer abbrechen falls Socket schnell wieder verbunden
+      if (disconnectTimer.current) { clearTimeout(disconnectTimer.current); disconnectTimer.current = null }
       socket.emit('subscribe', { topic: 'LH' })
       dispatch({ type: 'CONNECTED' })
     })
     socket.on('disconnect', () => {
-      stoppedSessions.current.clear()
-      dispatch({ type: 'DISCONNECTED' })
+      // Slots erst nach 5 Sekunden leeren — kurze Disconnects sollen nicht das laufende QSO löschen
+      disconnectTimer.current = setTimeout(() => {
+        stoppedSessions.current.clear()
+        dispatch({ type: 'DISCONNECTED' })
+      }, 5000)
     })
-    socket.on('connect_error', () => dispatch({ type: 'DISCONNECTED' }))
+    socket.on('connect_error', () => {
+      if (!disconnectTimer.current) {
+        disconnectTimer.current = setTimeout(() => {
+          dispatch({ type: 'DISCONNECTED' })
+        }, 5000)
+      }
+    })
 
     socket.on('mqtt', (data: { topic: string; payload: string }) => {
       if (data.topic !== 'LH') return
@@ -295,8 +308,10 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
       if (bm.Event === 'Session-Start') {
         dispatch({ type: 'CALL_START', slot, event: bm, direction })
       } else if (bm.Event === 'Session-Stop') {
+        // Stop=0 bedeutet kein echter Stopp-Zeitpunkt (BM Routing-Wechsel) — ignorieren
+        if (bm.Stop === 0) return
         // BM schickt beim Verbinden Catch-Up-Events für abgeschlossene Sessions — ignorieren
-        if (bm.Stop > 0 && Date.now() / 1000 - bm.Stop > 60) return
+        if (Date.now() / 1000 - bm.Stop > 60) return
         stoppedSessions.current.add(bm.SessionID)
         // Set-Größe begrenzen (Speicher)
         if (stoppedSessions.current.size > 200) {
@@ -311,7 +326,10 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
       }
     })
 
-    return () => { socket.disconnect() }
+    return () => {
+      if (disconnectTimer.current) clearTimeout(disconnectTimer.current)
+      socket.disconnect()
+    }
   }, [hotspotId, ownCallsign])
 
   return { state, dispatch }

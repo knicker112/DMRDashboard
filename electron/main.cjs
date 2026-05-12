@@ -1,5 +1,6 @@
 const { app, BrowserWindow, shell, ipcMain } = require('electron')
 const path = require('path')
+const fs = require('fs')
 const isDev = !app.isPackaged
 
 app.setAboutPanelOptions({
@@ -19,7 +20,10 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     title: 'DMR Dashboard',
-    icon: path.join(__dirname, '../public/favicon.ico'),
+    icon: (() => {
+      const p = path.join(__dirname, '../public/favicon.ico')
+      return fs.existsSync(p) ? p : undefined
+    })(),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

@@ -8,7 +8,7 @@ interface UpdateInfo {
 
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000 // 1x täglich
 const LAST_CHECK_KEY = 'dmr-dashboard-update-checked'
-const GITHUB_REPO = import.meta.env.VITE_GITHUB_REPO // z.B. "do2ef/dmr-dashboard"
+const GITHUB_REPO = import.meta.env.VITE_GITHUB_REPO ?? 'knicker112/DMRDashboard'
 
 export function useUpdateCheck(): UpdateInfo | null {
   const [info, setInfo] = useState<UpdateInfo | null>(null)
