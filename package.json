@@ -1,7 +1,7 @@
 {
   "name": "dmr-dashboard",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.7",
   "description": "BrandMeister DMR Hotspot Dashboard für Funkamateure",
   "author": "knicker112",
   "type": "module",
@@ -36,11 +36,13 @@
     ],
     "linux": {
       "target": "AppImage",
-      "category": "HamRadio"
+      "category": "HamRadio",
+      "artifactName": "DMR-Dashboard-${version}.${ext}"
     },
     "win": {
       "target": "nsis",
-      "icon": "public/favicon.ico"
+      "icon": "public/favicon.ico",
+      "artifactName": "DMR-Dashboard-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": true,
