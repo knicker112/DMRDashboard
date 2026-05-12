@@ -43,8 +43,8 @@
       "icon": "public/favicon.ico"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
       "installerLanguages": [
         "de_DE",
         "en_US"
