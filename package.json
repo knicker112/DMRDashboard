@@ -23,6 +23,9 @@
   "build": {
     "appId": "de.knicker112.dmr-dashboard",
     "productName": "DMR Dashboard",
+    "extraMetadata": {
+      "type": "commonjs"
+    },
     "directories": {
       "output": "release"
     },
