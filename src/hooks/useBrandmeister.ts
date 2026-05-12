@@ -227,6 +227,11 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
   const ownDmrIdRef = useRef<number | null>(null)
   // SessionIDs bereits beendeter Rufe — verhindert, dass Session-Update nach Session-Stop den Slot neu aktiviert
   const stoppedSessions = useRef<Set<string>>(new Set())
+  // Aus TX-Events gelernte TG-IDs — persistiert in localStorage, deckt dynamische TG-Nutzung ab
+  const learnedTgKey = `dmr-learned-tgs-${hotspotId}`
+  const learnedTgIds = useRef<Set<number>>(new Set(
+    JSON.parse(localStorage.getItem(learnedTgKey) ?? '[]') as number[]
+  ))
 
   useEffect(() => {
     const socket: Socket = io(BM_URL, {
@@ -260,9 +265,14 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
         ? 'group'
         : detectCallType(bm.DestinationID, bm.DestinationCall)
 
-      // Eigene DMR-ID aus TX-Ereignissen lernen (Session-Start hat SourceID befüllt)
+      // Eigene DMR-ID und genutzte TGs aus TX-Ereignissen lernen
       if (fromOwnHotspot && bm.Event === 'Session-Start' && bm.SourceID > 0) {
         ownDmrIdRef.current = bm.SourceID
+        // TG merken (auch dynamisch genutzte) damit eingehende Rufe erkannt werden
+        if (bm.DestinationID > 0 && callType === 'group' && !learnedTgIds.current.has(bm.DestinationID)) {
+          learnedTgIds.current.add(bm.DestinationID)
+          localStorage.setItem(learnedTgKey, JSON.stringify([...learnedTgIds.current]))
+        }
       }
 
       // Session-Start hat oft leere Callsigns — daher auch DestinationID prüfen
@@ -271,10 +281,10 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
         (ownDmrIdRef.current !== null && bm.DestinationID === ownDmrIdRef.current)
       )
 
-      // Gruppenruf als RX nur wenn statisch abonniert
+      // Gruppenruf als RX wenn TG statisch abonniert ODER aus TX-History bekannt (dynamic TGs)
       const isIncomingGroup = !fromOwnHotspot &&
         callType === 'group' &&
-        subscribedTgIdsRef.current.has(bm.DestinationID)
+        (subscribedTgIdsRef.current.has(bm.DestinationID) || learnedTgIds.current.has(bm.DestinationID))
 
       if (!fromOwnHotspot && !isIncomingPrivate && !isIncomingGroup) return
 
