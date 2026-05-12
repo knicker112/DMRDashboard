@@ -22,7 +22,7 @@ export function useHotspotOnline(hotspotId: string): boolean | null {
     }
 
     check()
-    const id = setInterval(check, 60_000)
+    const id = setInterval(check, 10_000)
     return () => { cancelled = true; clearInterval(id) }
   }, [hotspotId])
 
