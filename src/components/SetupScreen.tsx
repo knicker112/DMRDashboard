@@ -360,6 +360,7 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
                 title="Programm-Update"
                 description="Prüft ob eine neue Version des Programms verfügbar ist."
                 buttonLabel="Auf Updates prüfen"
+                okLabel="✓ Kein Update verfügbar"
                 state={updateCheckState}
                 disabled={!window.electronUpdater}
                 disabledHint="Nur in der installierten App verfügbar"
@@ -525,11 +526,12 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
 }
 
 function UpdateAction({
-  title, description, buttonLabel, state, disabled, disabledHint, onAction,
+  title, description, buttonLabel, okLabel = '✓ Erfolgreich', state, disabled, disabledHint, onAction,
 }: {
   title: string
   description: string
   buttonLabel: string
+  okLabel?: string
   state: 'idle' | 'loading' | 'ok' | 'error'
   disabled?: boolean
   disabledHint?: string
@@ -537,7 +539,7 @@ function UpdateAction({
 }) {
   const stateLabel =
     state === 'loading' ? '…' :
-    state === 'ok'      ? '✓ Erfolgreich' :
+    state === 'ok'      ? okLabel :
     state === 'error'   ? '✕ Fehlgeschlagen' : null
 
   return (
