@@ -113,13 +113,18 @@ jobs:
       - name: App-Version in build.gradle setzen
         run: |
           VERSION="${{ needs.bump.outputs.version }}"
-          # versionCode: 1.1.14 → 10114
           VERSION_CODE=$(echo "$VERSION" | awk -F. '{printf "%d%02d%02d", $1, $2, $3}')
           sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
 
+      - name: Android SDK Lizenzen akzeptieren
+        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Gradlew ausführbar machen
+        run: chmod +x android/gradlew
+
       - name: APK bauen
-        run: cd android && ./gradlew assembleDebug --no-daemon
+        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: APK umbenennen
         run: |
