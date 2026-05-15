@@ -94,6 +94,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - uses: android-actions/setup-android@v3
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -117,14 +119,11 @@ jobs:
           sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
 
-      - name: Android SDK Lizenzen akzeptieren
-        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
       - name: Gradlew ausführbar machen
         run: chmod +x android/gradlew
 
       - name: APK bauen
-        run: cd android && ./gradlew assembleDebug --no-daemon --stacktrace
+        run: cd android && ./gradlew assembleDebug --no-daemon
 
       - name: APK umbenennen
         run: |
