@@ -1,9 +1,9 @@
-version: 1.1.27
+version: 1.1.28
 files:
-  - url: https://github.com/knicker112/DMRDashboard/releases/download/v1.1.27/DMR-Dashboard-1.1.27-arm64.AppImage
-    sha512: f6+2kS63t7qHijf9ezgBGOaY0PoMxKPrfe0CCP1Bxi1ZLZ5fQRWqvzHXj3FN8L9v5o1iZ+3adSBcIy0Mh5FN/Q==
-    size: 127340257
-    blockMapSize: 133677
-path: DMR-Dashboard-1.1.27-arm64.AppImage
-sha512: f6+2kS63t7qHijf9ezgBGOaY0PoMxKPrfe0CCP1Bxi1ZLZ5fQRWqvzHXj3FN8L9v5o1iZ+3adSBcIy0Mh5FN/Q==
-releaseDate: '2026-05-15T17:17:15.318Z'
+  - url: https://github.com/knicker112/DMRDashboard/releases/download/v1.1.28/DMR-Dashboard-1.1.28-arm64.AppImage
+    sha512: A59yD883ta87ZmNeFfgxpc0pUFxhA6XF8Je3Zf5VeoXKZrVnaf0tbboZ6EMO18NCedi7Vf2MFO8IaYa/9ApFmA==
+    size: 127340277
+    blockMapSize: 133697
+path: DMR-Dashboard-1.1.28-arm64.AppImage
+sha512: A59yD883ta87ZmNeFfgxpc0pUFxhA6XF8Je3Zf5VeoXKZrVnaf0tbboZ6EMO18NCedi7Vf2MFO8IaYa/9ApFmA==
+releaseDate: '2026-05-15T17:29:35.121Z'
