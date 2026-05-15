@@ -32,6 +32,10 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
   const color = HOTSPOT_COLORS[hotspotIndex % HOTSPOT_COLORS.length]
   const subscribedTGs = useSubscribedTGs(hotspot.id)
   const subscribedTgIds = useMemo(() => new Set(subscribedTGs.map(t => t.talkgroup)), [subscribedTGs])
+  const subscribedTgSlots = useMemo(() =>
+    new Map(subscribedTGs.map(t => [t.talkgroup, (t.slot === 1 ? 1 : 2) as 1 | 2])),
+    [subscribedTGs]
+  )
   const hotspotOnline = useHotspotOnline(hotspot.id)
 
   // Abonnierte TG-Namen direkt in den TG-Cache laden
@@ -43,7 +47,7 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
     }
     applyCustomTgNames(names)
   }, [subscribedTGs])
-  const { state, dispatch } = useBrandmeister(hotspot.id, config.callsign, subscribedTgIds)
+  const { state, dispatch } = useBrandmeister(hotspot.id, config.callsign, subscribedTgIds, subscribedTgSlots)
   const { lookup, fetchUser } = useRadioId()
   const { lookup: callsignLookup } = useCallsigns()
 

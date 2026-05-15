@@ -216,12 +216,16 @@ function reducer(state: DashboardState, action: Action): DashboardState {
   }
 }
 
-export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscribedTgIds?: Set<number>) {
+export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscribedTgIds?: Set<number>, subscribedTgSlots?: Map<number, 1 | 2>) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   // Ref hält immer die aktuellen abonnierten TGs ohne Socket-Reconnect bei Änderung
   const subscribedTgIdsRef = useRef<Set<number>>(new Set())
   subscribedTgIdsRef.current = subscribedTgIds ?? new Set()
+
+  // TG → Abonnements-Slot-Mapping (welcher Slot ist die TG bei uns konfiguriert?)
+  const subscribedTgSlotsRef = useRef<Map<number, 1 | 2>>(new Map())
+  subscribedTgSlotsRef.current = subscribedTgSlots ?? new Map()
 
   // Eigene DMR-ID — wird aus TX-Events gelernt für Incoming-Erkennung
   const ownDmrIdRef = useRef<number | null>(null)
@@ -307,9 +311,14 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
 
       if (!fromOwnHotspot && !isIncomingPrivate && !isIncomingGroup) return
 
-      // Bei eingehenden Privatrufen kommt das LH-Event vom Hotspot des Anrufers —
-      // dessen Slot ist irrelevant. Wir verwenden den eigenen gelernten TX-Slot.
-      const slot: 1 | 2 = isIncomingPrivate ? ownSlotRef.current : rawSlot
+      // Bei eingehenden Privatrufen: eigenen gelernten TX-Slot verwenden.
+      // Bei eingehenden Gruppenrufen: konfigurierten Abonnements-Slot bevorzugen —
+      // der rawSlot kommt vom Anrufer und entspricht nicht unbedingt unserem Zeitschlitz.
+      const slot: 1 | 2 = isIncomingPrivate
+        ? ownSlotRef.current
+        : (isIncomingGroup && subscribedTgSlotsRef.current.has(bm.DestinationID))
+          ? subscribedTgSlotsRef.current.get(bm.DestinationID)!
+          : rawSlot
       const direction: 'tx' | 'rx' = fromOwnHotspot ? 'tx' : 'rx'
 
       if (bm.Event === 'Session-Start') {
