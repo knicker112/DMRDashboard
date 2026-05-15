@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { SlotCard } from '../components/SlotCard'
 import type { SlotState } from '../types'
+import { defaultAudioRx, defaultAudioTx } from '../utils/audio'
+
+const audioProps = { audioRx: defaultAudioRx, audioTx: defaultAudioTx }
 
 const idleSlot: SlotState = {
   active: false,
@@ -34,28 +37,28 @@ const activeSlot: SlotState = {
 }
 
 describe('SlotCard', () => {
-  it('zeigt "—" wenn Slot inaktiv ist', () => {
-    render(<SlotCard slot={1} state={idleSlot} />)
-    expect(screen.getByText('—')).toBeInTheDocument()
+  it('zeigt BEREIT wenn Slot inaktiv ist', () => {
+    render(<SlotCard slot={1} state={idleSlot} {...audioProps} />)
+    expect(screen.getByText('BEREIT')).toBeInTheDocument()
   })
 
   it('zeigt Rufzeichen wenn Slot aktiv ist', () => {
-    render(<SlotCard slot={1} state={activeSlot} />)
+    render(<SlotCard slot={1} state={activeSlot} {...audioProps} />)
     expect(screen.getByText('DL1XYZ')).toBeInTheDocument()
   })
 
   it('zeigt Talkgroup an', () => {
-    render(<SlotCard slot={1} state={activeSlot} />)
+    render(<SlotCard slot={1} state={activeSlot} {...audioProps} />)
     expect(screen.getByText(/TG 262/)).toBeInTheDocument()
   })
 
   it('zeigt Name wenn vorhanden', () => {
-    render(<SlotCard slot={1} state={activeSlot} />)
+    render(<SlotCard slot={1} state={activeSlot} {...audioProps} />)
     expect(screen.getByText('Max Mustermann')).toBeInTheDocument()
   })
 
   it('zeigt Slot-Nummer in der Überschrift', () => {
-    render(<SlotCard slot={2} state={idleSlot} />)
+    render(<SlotCard slot={2} state={idleSlot} {...audioProps} />)
     expect(screen.getByText(/SLOT 2/)).toBeInTheDocument()
   })
 })
