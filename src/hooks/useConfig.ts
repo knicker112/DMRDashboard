@@ -40,31 +40,38 @@ function envDefaults(): AppConfig | null {
 }
 
 function migrate(raw: any): AppConfig | null {
-  if (!raw) return null
+  if (!raw || typeof raw !== 'object') return null
   const envKey = import.meta.env.VITE_APRS_API_KEY ?? ''
+
   // Altes Format: { hotspotId, callsign, lat, lng, aprsApiKey }
   if (raw.hotspotId && !raw.hotspots) {
     return {
-      hotspots: [{ id: raw.hotspotId, name: 'Hotspot 1', slots: 2 }],
+      hotspots: [{ id: String(raw.hotspotId), name: 'Hotspot 1', slots: 2 }],
       callsign: raw.callsign ?? '',
-      lat: raw.lat ?? 51.0,
-      lng: raw.lng ?? 10.0,
+      lat: raw.lat ?? 0,
+      lng: raw.lng ?? 0,
       aprsApiKey: raw.aprsApiKey || envKey,
-      customTgNames: {},
-      audioRx: { ...defaultAudioRx },
-      audioTx: { ...defaultAudioTx },
-    }
-  }
-  // Neues Format — fehlende Felder aus Env-Defaults ergänzen
-  if (Array.isArray(raw.hotspots) && raw.hotspots.length > 0 && raw.callsign) {
-    return {
-      ...raw,
       customTgNames: raw.customTgNames ?? {},
-      aprsApiKey: raw.aprsApiKey || envKey,
       audioRx: raw.audioRx ?? { ...defaultAudioRx },
       audioTx: raw.audioTx ?? { ...defaultAudioTx },
-    } as AppConfig
+    }
   }
+
+  // Neues Format — alle vorhandenen Felder übernehmen, fehlende mit Defaults füllen
+  // KEIN && raw.callsign — leerer String darf Config nicht verwerfen
+  if (Array.isArray(raw.hotspots) && raw.hotspots.length > 0) {
+    return {
+      hotspots: raw.hotspots as HotspotConfig[],
+      callsign: raw.callsign ?? '',
+      lat: raw.lat ?? 0,
+      lng: raw.lng ?? 0,
+      aprsApiKey: raw.aprsApiKey || envKey,
+      customTgNames: raw.customTgNames ?? {},
+      audioRx: raw.audioRx ?? { ...defaultAudioRx },
+      audioTx: raw.audioTx ?? { ...defaultAudioTx },
+    }
+  }
+
   return null
 }
 
