@@ -184,19 +184,7 @@ jobs:
             sed -i "s|url: DMR-Dashboard|url: ${BASE}/DMR-Dashboard|g" "$f"
           done
 
-      # latest.yml ins Repo einchecken statt in den GitHub-Release
-      - name: Update-Manifeste ins Repository einchecken
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          mkdir -p updates
-          cp DMR-Dashboard-Windows/latest.yml updates/latest.yml
-          cp DMR-Dashboard-Linux/latest-linux*.yml updates/
-          git add updates/
-          git diff --staged --quiet || git commit -m "chore: update manifests v${{ needs.bump.outputs.version }} [skip ci]"
-          git push origin master
-
-      # Release: nur Installer, keine .yml-Dateien
+      # Release zuerst: .exe und .AppImage hochladen (unabhängig vom yml-Commit)
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.bump.outputs.version }}
@@ -206,3 +194,16 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # latest.yml ins Repo einchecken (nach Release, damit Download-URLs gültig sind)
+      - name: Update-Manifeste ins Repository einchecken
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p updates
+          cp DMR-Dashboard-Windows/latest.yml updates/latest.yml
+          cp DMR-Dashboard-Linux/latest-linux*.yml updates/
+          git add updates/
+          git diff --staged --quiet || git commit -m "chore: update manifests v${{ needs.bump.outputs.version }} [skip ci]"
+          git pull --rebase origin master
+          git push origin master
