@@ -110,6 +110,14 @@ jobs:
       - name: Assets synchronisieren
         run: npx cap sync android
 
+      - name: App-Version in build.gradle setzen
+        run: |
+          VERSION="${{ needs.bump.outputs.version }}"
+          # versionCode: 1.1.14 → 10114
+          VERSION_CODE=$(echo "$VERSION" | awk -F. '{printf "%d%02d%02d", $1, $2, $3}')
+          sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
+
       - name: APK bauen
         run: cd android && ./gradlew assembleDebug --no-daemon
 
