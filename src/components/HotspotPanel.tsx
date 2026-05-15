@@ -138,10 +138,10 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
       ?? (slot.dmrId ? lookup(slot.dmrId)?.callsign ?? null : null)
     const name = slot.name
       ?? (slot.dmrId ? lookup(slot.dmrId)?.fname ?? null : null)
-    // APRS-Live-Standort hat Vorrang, danach RadioID-Stadt
+    // APRS-Live-Standort hat Vorrang, danach PDF-Rufzeichenliste — nie RadioID
     const location = aprsCity
       ?? slot.location
-      ?? (slot.dmrId ? (lookup(slot.dmrId)?.city || lookup(slot.dmrId)?.country || null) : null)
+      ?? (cs ? callsignLookup(cs)?.city ?? null : null)
     return { ...slot, talkgroupName: tgName, callsign: cs, name, location }
   }
 
@@ -161,26 +161,30 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
       if (!dmrId) return
       const user = await fetchUser(dmrId)
       if (user) {
+        // Ort NUR aus PDF-Rufzeichenliste — nicht aus RadioID/BrandMeister
+        const location = (user.callsign ? callsignLookup(user.callsign)?.city : null) ?? ''
         dispatch({
           type: 'SET_USER',
           slot,
           name: user.fname,
-          location: user.city || user.country || '',
+          location,
           callsign: user.callsign || undefined,
         })
-        dispatch({ type: 'PATCH_HISTORY_SOURCE', talkgroup: talkgroup ?? 0, sourceDmrId: dmrId, callsign: user.callsign, name: user.fname, location: user.city || user.country || '' })
+        dispatch({ type: 'PATCH_HISTORY_SOURCE', talkgroup: talkgroup ?? 0, sourceDmrId: dmrId, callsign: user.callsign, name: user.fname, location })
       }
     }
 
     async function resolveDestination(slot: 1 | 2, dmrId: number) {
       const user = await fetchUser(dmrId)
       if (user) {
+        // Ort NUR aus PDF-Rufzeichenliste
+        const city = (user.callsign ? callsignLookup(user.callsign)?.city : null) ?? null
         dispatch({
           type: 'SET_DESTINATION_INFO',
           slot,
           callsign: user.callsign,
           name: user.fname || null,
-          city: user.city || user.country || null,
+          city,
         })
         dispatch({ type: 'PATCH_HISTORY', talkgroup: dmrId, talkgroupName: user.callsign })
       }
