@@ -18,6 +18,10 @@ release/
 # Capacitor Android (wird im CI generiert)
 android/
 
+# Android Signing-Keystore (NIEMALS committen!)
+keystore.jks
+*.keystore
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
