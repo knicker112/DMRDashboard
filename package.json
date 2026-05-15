@@ -1,7 +1,7 @@
 {
   "name": "dmr-dashboard",
   "private": true,
-  "version": "1.1.20",
+  "version": "1.1.21",
   "description": "BrandMeister DMR Hotspot Dashboard für Funkamateure",
   "author": "Christian Schmitz DO2EF",
   "type": "module",
