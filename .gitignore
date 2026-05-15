@@ -21,6 +21,7 @@ android/
 # Android Signing-Keystore (NIEMALS committen!)
 keystore.jks
 *.keystore
+KEYSTORE-SECRETS.txt
 
 # Editor directories and files
 .vscode/*
