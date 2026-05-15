@@ -236,13 +236,16 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
         const d2City = slot2DestCity ?? slot2State.destRidCity ?? null
         return hotspot.slots === 1 ? (
           <SlotCard slot={1} state={slot1State} distanceKm={slot1Distance}
-            destCity={d1City} destDistanceKm={slot1DestDistance} destName={slot1State.destName ?? null} />
+            destCity={d1City} destDistanceKm={slot1DestDistance} destName={slot1State.destName ?? null}
+            audioRx={config.audioRx} audioTx={config.audioTx} />
         ) : (
           <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-2 gap-6'}>
             <SlotCard slot={1} state={slot1State} distanceKm={slot1Distance}
-              destCity={d1City} destDistanceKm={slot1DestDistance} destName={slot1State.destName ?? null} />
+              destCity={d1City} destDistanceKm={slot1DestDistance} destName={slot1State.destName ?? null}
+              audioRx={config.audioRx} audioTx={config.audioTx} />
             <SlotCard slot={2} state={slot2State} distanceKm={slot2Distance}
-              destCity={d2City} destDistanceKm={slot2DestDistance} destName={slot2State.destName ?? null} />
+              destCity={d2City} destDistanceKm={slot2DestDistance} destName={slot2State.destName ?? null}
+              audioRx={config.audioRx} audioTx={config.audioTx} />
           </div>
         )
       })()}

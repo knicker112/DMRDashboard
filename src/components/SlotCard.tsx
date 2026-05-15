@@ -1,26 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import type { SlotState } from '../types'
+import type { AudioChannelConfig } from '../utils/audio'
+import { playAudio } from '../utils/audio'
 import { formatDistance } from '../utils/geo'
-
-function playRxBeep() {
-  try {
-    const ctx = new AudioContext()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(880, ctx.currentTime)
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.12)
-    gain.gain.setValueAtTime(0, ctx.currentTime)
-    gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.01)
-    gain.gain.setValueAtTime(0.25, ctx.currentTime + 0.2)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + 0.35)
-    osc.onended = () => ctx.close()
-  } catch {}
-}
 
 interface SlotCardProps {
   slot: 1 | 2
@@ -29,6 +11,8 @@ interface SlotCardProps {
   destCity?: string | null
   destDistanceKm?: number | null
   destName?: string | null
+  audioRx: AudioChannelConfig
+  audioTx: AudioChannelConfig
 }
 
 function useElapsed(startedAt: Date | null): string {
@@ -90,7 +74,7 @@ function colorScheme(state: SlotState) {
   }
 }
 
-export function SlotCard({ slot, state, distanceKm, destCity, destDistanceKm, destName }: SlotCardProps) {
+export function SlotCard({ slot, state, distanceKm, destCity, destDistanceKm, destName, audioRx, audioTx }: SlotCardProps) {
   const isPrivate = state.callType === 'private'
   const c = colorScheme(state)
   const duration = useElapsed(state.startedAt)
@@ -100,8 +84,11 @@ export function SlotCard({ slot, state, distanceKm, destCity, destDistanceKm, de
   useEffect(() => {
     const was = prevActiveRef.current
     prevActiveRef.current = state.active
-    if (!was && state.active && state.direction === 'rx') playRxBeep()
-  }, [state.active, state.direction])
+    if (!was && state.active) {
+      if (state.direction === 'rx') playAudio(audioRx)
+      if (state.direction === 'tx') playAudio(audioTx)
+    }
+  }, [state.active, state.direction, audioRx, audioTx])
 
   return (
     <div className={`relative rounded-2xl p-6 flex flex-col gap-4 transition-all duration-500 border-2 ${c.bg} ${c.border} ${c.shadow}`}>
