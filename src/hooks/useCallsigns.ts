@@ -35,6 +35,21 @@ function needsRefresh(): boolean {
 // Modulweiter Cache — einmal geladen, für die gesamte Session gültig
 let inMemory: CallsignData | null = loadCached()
 
+// Manueller Refresh — lädt frische Daten von GitHub, unabhängig vom Alter
+export async function refreshCallsigns(): Promise<boolean> {
+  try {
+    const res = await fetch(REMOTE_URL)
+    const json = await res.json() as { callsigns?: CallsignData }
+    if (!json.callsigns) return false
+    inMemory = json.callsigns
+    localStorage.setItem(TIMESTAMP_KEY, String(Date.now()))
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(json.callsigns)) } catch {}
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function useCallsigns() {
   const [data, setData] = useState<CallsignData>(inMemory ?? {})
 

@@ -69,6 +69,10 @@ function setupAutoUpdater() {
     autoUpdater.quitAndInstall()
   })
 
+  ipcMain.handle('check-for-updates', () => {
+    autoUpdater.checkForUpdatesAndNotify()
+  })
+
   // Kurz warten bis das Fenster geladen ist, dann prüfen
   setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000)
 }

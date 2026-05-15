@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import type { AppConfig, HotspotConfig } from '../hooks/useConfig'
 import type { AudioChannelConfig } from '../utils/audio'
 import { defaultAudioRx, defaultAudioTx, playAudio } from '../utils/audio'
+import { refreshCallsigns } from '../hooks/useCallsigns'
 
 interface Props {
   initial?: AppConfig
@@ -15,7 +16,7 @@ function emptyHotspot(index: number): HotspotConfig {
 
 interface TgNameRow { id: string; name: string }
 
-type Tab = 'hotspots' | 'station' | 'audio' | 'tgnames'
+type Tab = 'hotspots' | 'station' | 'audio' | 'tgnames' | 'updates' | 'about'
 
 export function SetupScreen({ initial, onSave, onCancel }: Props) {
   const [hotspots, setHotspots] = useState<HotspotConfig[]>(
@@ -39,6 +40,58 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
 
   const rxFileRef = useRef<HTMLInputElement>(null)
   const txFileRef = useRef<HTMLInputElement>(null)
+
+  type ActionState = 'idle' | 'loading' | 'ok' | 'error'
+  const [updateCheckState, setUpdateCheckState] = useState<ActionState>('idle')
+  const [callsignRefreshState, setCallsignRefreshState] = useState<ActionState>('idle')
+
+  async function handleCheckForUpdates() {
+    setUpdateCheckState('loading')
+    try {
+      await window.electronUpdater?.checkForUpdates?.()
+      setUpdateCheckState('ok')
+    } catch {
+      setUpdateCheckState('error')
+    }
+    setTimeout(() => setUpdateCheckState('idle'), 4000)
+  }
+
+  async function handleRefreshCallsigns() {
+    setCallsignRefreshState('loading')
+    const ok = await refreshCallsigns()
+    setCallsignRefreshState(ok ? 'ok' : 'error')
+    setTimeout(() => setCallsignRefreshState('idle'), 4000)
+  }
+
+  const [feedbackTitle, setFeedbackTitle] = useState('')
+  const [feedbackBody, setFeedbackBody] = useState('')
+  const [feedbackFile, setFeedbackFile] = useState<File | null>(null)
+  const [feedbackPreview, setFeedbackPreview] = useState<string | null>(null)
+  const feedbackFileRef = useRef<HTMLInputElement | null>(null)
+
+  function handleFeedbackFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setFeedbackFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = ev => setFeedbackPreview(ev.target?.result as string)
+      reader.readAsDataURL(file)
+    } else {
+      setFeedbackPreview(null)
+    }
+    e.target.value = ''
+  }
+
+  function handleOpenGitHubIssue() {
+    const title = feedbackTitle.trim() || 'Bug/Feedback'
+    let body = feedbackBody.trim()
+    if (feedbackFile) {
+      body += `\n\n---\n*Screenshot: **${feedbackFile.name}** — bitte unten im Issue anhängen (Drag & Drop oder Strg+V)*`
+    }
+    body += `\n\n---\n*DMR Dashboard v${__APP_VERSION__}*`
+    const url = `https://github.com/knicker112/DMRDashboard/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=bug`
+    window.open(url, '_blank', 'noopener')
+  }
 
   function addTgRow() { setTgRows(prev => [...prev, { id: '', name: '' }]) }
   function removeTgRow(i: number) { setTgRows(prev => prev.filter((_, idx) => idx !== i)) }
@@ -117,6 +170,8 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
     ['station',  'Station'],
     ['audio',    '🔊 Audio'],
     ['tgnames',  'TG-Namen'],
+    ['updates',  '↑ Updates'],
+    ['about',    'Über'],
   ]
 
   const showAll = !initial
@@ -296,6 +351,117 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
             </div>
           )}
 
+          {/* UPDATES */}
+          {activeTab === 'updates' && !showAll && (
+            <div className="flex flex-col gap-5">
+              <div className="text-slate-300 text-xs font-bold tracking-widest">UPDATES</div>
+
+              <UpdateAction
+                title="Programm-Update"
+                description="Prüft ob eine neue Version des Programms verfügbar ist."
+                buttonLabel="Auf Updates prüfen"
+                state={updateCheckState}
+                disabled={!window.electronUpdater}
+                disabledHint="Nur in der installierten App verfügbar"
+                onAction={handleCheckForUpdates}
+              />
+
+              <UpdateAction
+                title="Rufzeichenliste"
+                description="Lädt die aktuelle Rufzeichenliste von GitHub (BNetzA-Daten)."
+                buttonLabel="Jetzt aktualisieren"
+                state={callsignRefreshState}
+                onAction={handleRefreshCallsigns}
+              />
+            </div>
+          )}
+
+          {/* ÜBER */}
+          {activeTab === 'about' && !showAll && (
+            <div className="flex flex-col gap-6">
+
+              {/* Branding */}
+              <div className="bg-slate-900 rounded-xl p-5 flex flex-col gap-2">
+                <div className="text-sky-400 text-lg font-black tracking-widest">DMR DASHBOARD</div>
+                <div className="text-slate-400 text-sm">Version {__APP_VERSION__}</div>
+                <div className="mt-1 text-slate-300 text-sm font-medium">Entwickelt von Christian Schmitz DO2EF</div>
+                <a
+                  href="https://github.com/knicker112/DMRDashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-500 hover:text-sky-300 text-xs transition-colors mt-1 w-fit"
+                >
+                  github.com/knicker112/DMRDashboard →
+                </a>
+              </div>
+
+              {/* Feedback / Bug melden */}
+              <div className="flex flex-col gap-3">
+                <div className="text-slate-300 text-xs font-bold tracking-widest">FEEDBACK & BUGS</div>
+
+                <input
+                  className="input"
+                  placeholder="Titel (z.B. Slot zeigt falschen Rufzeichen)"
+                  value={feedbackTitle}
+                  onChange={e => setFeedbackTitle(e.target.value)}
+                />
+
+                <textarea
+                  className="input resize-none h-28"
+                  placeholder="Beschreibung — was ist passiert? Wie lässt sich der Fehler reproduzieren?"
+                  value={feedbackBody}
+                  onChange={e => setFeedbackBody(e.target.value)}
+                />
+
+                {/* Screenshot */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => feedbackFileRef.current?.click()}
+                    className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    📷 Screenshot anhängen
+                  </button>
+                  {feedbackFile && (
+                    <span className="text-slate-400 text-xs truncate flex-1">{feedbackFile.name}</span>
+                  )}
+                  {feedbackFile && (
+                    <button
+                      type="button"
+                      onClick={() => { setFeedbackFile(null); setFeedbackPreview(null) }}
+                      className="text-slate-500 hover:text-red-400 transition-colors text-sm"
+                    >✕</button>
+                  )}
+                </div>
+                <input
+                  ref={feedbackFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFeedbackFile}
+                />
+
+                {feedbackPreview && (
+                  <div className="rounded-lg overflow-hidden border border-slate-700">
+                    <img src={feedbackPreview} alt="Screenshot-Vorschau" className="w-full max-h-40 object-contain bg-slate-950" />
+                    <p className="text-slate-600 text-xs p-2">Bild nach dem Öffnen des GitHub-Issues manuell einfügen (Strg+V / Drag & Drop)</p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleOpenGitHubIssue}
+                  disabled={!feedbackTitle.trim() && !feedbackBody.trim()}
+                  className="bg-sky-700 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  Bug/Idee auf GitHub melden →
+                </button>
+                <p className="text-slate-600 text-xs">Öffnet ein neues Issue auf GitHub — vorausgefüllt mit deinem Text.</p>
+              </div>
+
+            </div>
+          )}
+
           {/* TG-NAMEN */}
           {(showAll || activeTab === 'tgnames') && (
             <div>
@@ -358,6 +524,48 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
   )
 }
 
+function UpdateAction({
+  title, description, buttonLabel, state, disabled, disabledHint, onAction,
+}: {
+  title: string
+  description: string
+  buttonLabel: string
+  state: 'idle' | 'loading' | 'ok' | 'error'
+  disabled?: boolean
+  disabledHint?: string
+  onAction: () => void
+}) {
+  const stateLabel =
+    state === 'loading' ? '…' :
+    state === 'ok'      ? '✓ Erfolgreich' :
+    state === 'error'   ? '✕ Fehlgeschlagen' : null
+
+  return (
+    <div className="bg-slate-900 rounded-xl p-4 flex flex-col gap-2">
+      <div className="text-slate-200 text-sm font-bold">{title}</div>
+      <div className="text-slate-500 text-xs">{description}</div>
+      {disabled && disabledHint && (
+        <div className="text-slate-600 text-xs">{disabledHint}</div>
+      )}
+      <div className="flex items-center gap-3 mt-1">
+        <button
+          type="button"
+          onClick={onAction}
+          disabled={disabled || state === 'loading'}
+          className="bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+        >
+          {state === 'loading' ? 'Lädt…' : buttonLabel}
+        </button>
+        {stateLabel && state !== 'loading' && (
+          <span className={`text-xs font-bold ${state === 'ok' ? 'text-green-400' : 'text-red-400'}`}>
+            {stateLabel}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function Field({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -375,7 +583,7 @@ function AudioChannel({
   color: string
   cfg: AudioChannelConfig
   setCfg: React.Dispatch<React.SetStateAction<AudioChannelConfig>>
-  fileRef: React.RefObject<HTMLInputElement>
+  fileRef: React.RefObject<HTMLInputElement | null>
   onFileChange: (channel: 'rx' | 'tx', e: React.ChangeEvent<HTMLInputElement>) => void
   onRemoveFile: (channel: 'rx' | 'tx') => void
   channel: 'rx' | 'tx'

@@ -157,6 +157,11 @@ function Dashboard({ config, onOpenSettings }: {
           homeCallsign={config.callsign}
         />
 
+        {/* Branding */}
+        <div className="mt-6 text-center text-slate-700 text-xs font-mono tracking-widest">
+          DMR Dashboard · Entwickelt von Christian Schmitz DO2EF
+        </div>
+
       </div>
     </div>
   )

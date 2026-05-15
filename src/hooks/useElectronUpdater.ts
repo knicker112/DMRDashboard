@@ -5,6 +5,7 @@ interface ElectronUpdater {
   onDownloadProgress: (cb: (p: { percent: number }) => void) => void
   onUpdateReady:      (cb: (info: { version: string }) => void) => void
   installAndRestart:  () => void
+  checkForUpdates?:   () => Promise<void>
 }
 
 declare global {

@@ -225,6 +225,8 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
 
   // Eigene DMR-ID — wird aus TX-Events gelernt für Incoming-Erkennung
   const ownDmrIdRef = useRef<number | null>(null)
+  // Eigener TX-Slot — wird aus TX-Events gelernt; eingehende Privatrufe kommen auf diesem Slot an
+  const ownSlotRef = useRef<1 | 2>(2)
   // SessionIDs bereits beendeter Rufe — verhindert, dass Session-Update nach Session-Stop den Slot neu aktiviert
   const stoppedSessions = useRef<Set<string>>(new Set())
   // Timer für verzögertes Slot-Leeren bei Socket-Disconnect (verhindert Flackern bei Kurz-Disconnects)
@@ -278,9 +280,13 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
         ? 'group'
         : detectCallType(bm.DestinationID, bm.DestinationCall)
 
-      // Eigene DMR-ID und genutzte TGs aus TX-Ereignissen lernen
+      // BM LH verwendet 1-basierte Slot-Nummerierung (1=TS1, 2=TS2)
+      const rawSlot: 1 | 2 = bm.Slot === 1 ? 1 : 2
+
+      // Eigene DMR-ID, Slot und genutzte TGs aus TX-Ereignissen lernen
       if (fromOwnHotspot && bm.Event === 'Session-Start' && bm.SourceID > 0) {
         ownDmrIdRef.current = bm.SourceID
+        ownSlotRef.current = rawSlot
         // TG merken (auch dynamisch genutzte) damit eingehende Rufe erkannt werden
         if (bm.DestinationID > 0 && callType === 'group' && !learnedTgIds.current.has(bm.DestinationID)) {
           learnedTgIds.current.add(bm.DestinationID)
@@ -301,8 +307,9 @@ export function useBrandmeister(hotspotId: string, ownCallsign?: string, subscri
 
       if (!fromOwnHotspot && !isIncomingPrivate && !isIncomingGroup) return
 
-      // BM LH verwendet 1-basierte Slot-Nummerierung (1=TS1, 2=TS2)
-      const slot: 1 | 2 = bm.Slot === 1 ? 1 : 2
+      // Bei eingehenden Privatrufen kommt das LH-Event vom Hotspot des Anrufers —
+      // dessen Slot ist irrelevant. Wir verwenden den eigenen gelernten TX-Slot.
+      const slot: 1 | 2 = isIncomingPrivate ? ownSlotRef.current : rawSlot
       const direction: 'tx' | 'rx' = fromOwnHotspot ? 'tx' : 'rx'
 
       if (bm.Event === 'Session-Start') {

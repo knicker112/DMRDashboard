@@ -51,6 +51,8 @@ function migrate(raw: any): AppConfig | null {
       lng: raw.lng ?? 10.0,
       aprsApiKey: raw.aprsApiKey || envKey,
       customTgNames: {},
+      audioRx: { ...defaultAudioRx },
+      audioTx: { ...defaultAudioTx },
     }
   }
   // Neues Format — fehlende Felder aus Env-Defaults ergänzen
