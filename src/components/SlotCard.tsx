@@ -134,8 +134,11 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
               <span className="text-5xl font-black text-white tracking-wide leading-none">
                 {state.callsign}
               </span>
-              {!isPrivate && (state.location || distanceKm != null) && (
-                <span className="text-sm text-slate-400 mt-1">
+              {state.name && (
+                <span className="text-lg text-slate-200 mt-0.5">{state.name}</span>
+              )}
+              {(state.location || distanceKm != null) && (
+                <span className="text-sm text-slate-400 mt-0.5">
                   {state.location ?? ''}
                   {state.location && distanceKm != null ? ' · ' : ''}
                   {distanceKm != null ? `${distanceApprox ? '~' : ''}${formatDistance(distanceKm)}` : ''}
@@ -169,12 +172,6 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
                 )}
               </div>
             )}
-          </div>
-
-          {/* Name + Ort */}
-          <div className="flex flex-col gap-1">
-            {state.name && <div className="text-xl text-slate-100 font-medium">{state.name}</div>}
-            {isPrivate && state.location && <div className="text-lg text-slate-300">{state.location}</div>}
           </div>
 
           {/* Dauer + Entfernung */}
