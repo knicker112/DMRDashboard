@@ -316,7 +316,7 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
                     onChange={e => setAprsApiKey(e.target.value)}
                     placeholder="12345.AbcDefGhij"
                   />
-                  <p className="text-slate-600 text-xs">Für Live-Standortanzeige über APRS — sendet dein Gerät GPS über DMR, reicht das</p>
+                  <p className="text-slate-600 text-xs">Für Live-Standortanzeige über APRS — wird benötigt wenn dein Gerät GPS-Daten über DMR sendet</p>
                 </div>
               </div>
             </div>
