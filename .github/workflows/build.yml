@@ -60,14 +60,26 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run electron:build:linux
+
+      # Vite einmalig bauen, dann electron-builder für jede Architektur
+      - name: Vite Build
+        run: npx vite build
+
+      - name: AppImage x64 (Linux / Linux Mint)
+        run: npx electron-builder --linux AppImage --x64 --publish never
+
+      - name: AppImage arm64 (Raspberry Pi 4 / 5 / Zero 2 W)
+        run: npx electron-builder --linux AppImage --arm64 --publish never
+
+      - name: AppImage armv7l (Raspberry Pi 2 / 3)
+        run: npx electron-builder --linux AppImage --armv7l --publish never
 
       - uses: actions/upload-artifact@v4
         with:
           name: DMR-Dashboard-Linux
           path: |
             release/*.AppImage
-            release/latest-linux.yml
+            release/latest-linux*.yml
 
   build-windows:
     needs: bump
@@ -107,7 +119,7 @@ jobs:
           tag_name: v${{ needs.bump.outputs.version }}
           files: |
             DMR-Dashboard-Linux/*.AppImage
-            DMR-Dashboard-Linux/latest-linux.yml
+            DMR-Dashboard-Linux/latest-linux*.yml
             DMR-Dashboard-Windows/*.exe
             DMR-Dashboard-Windows/latest.yml
           generate_release_notes: true
