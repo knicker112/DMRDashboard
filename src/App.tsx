@@ -140,10 +140,14 @@ function Dashboard({ config, onOpenSettings }: {
           </div>
         </div>
 
-        {/* Ein Panel pro Hotspot */}
+        {/* Ein Panel pro Hotspot — responsiv: Hochformat=untereinander, Querformat=nebeneinander */}
         {(() => {
           const n = config.hotspots.length
-          const grid = n === 1 ? '' : n === 2 ? 'grid grid-cols-2 gap-6' : 'grid grid-cols-3 gap-4'
+          const grid = n === 1
+            ? ''
+            : n === 2
+              ? 'grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6'
+              : 'grid grid-cols-1 landscape:grid-cols-3 md:grid-cols-3 gap-4'
           return (
             <div className={grid}>
               {config.hotspots.map((hotspot, idx) => (

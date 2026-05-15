@@ -149,7 +149,7 @@ jobs:
             release/latest.yml
 
   release:
-    needs: [bump, build-linux, build-windows, build-android]
+    needs: [bump, build-linux, build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -164,7 +164,6 @@ jobs:
             DMR-Dashboard-Linux/latest-linux*.yml
             DMR-Dashboard-Windows/*.exe
             DMR-Dashboard-Windows/latest.yml
-            DMR-Dashboard-Android/*.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
