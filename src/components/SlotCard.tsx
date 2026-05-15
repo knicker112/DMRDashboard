@@ -8,6 +8,7 @@ interface SlotCardProps {
   slot: 1 | 2
   state: SlotState
   distanceKm?: number | null
+  distanceApprox?: boolean
   destCity?: string | null
   destDistanceKm?: number | null
   destName?: string | null
@@ -74,7 +75,7 @@ function colorScheme(state: SlotState) {
   }
 }
 
-export function SlotCard({ slot, state, distanceKm, destCity, destDistanceKm, destName, audioRx, audioTx }: SlotCardProps) {
+export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, destDistanceKm, destName, audioRx, audioTx }: SlotCardProps) {
   const isPrivate = state.callType === 'private'
   const c = colorScheme(state)
   const duration = useElapsed(state.startedAt)
@@ -137,7 +138,7 @@ export function SlotCard({ slot, state, distanceKm, destCity, destDistanceKm, de
                 <span className="text-sm text-slate-400 mt-1">
                   {state.location ?? ''}
                   {state.location && distanceKm != null ? ' · ' : ''}
-                  {distanceKm != null ? formatDistance(distanceKm) : ''}
+                  {distanceKm != null ? `${distanceApprox ? '~' : ''}${formatDistance(distanceKm)}` : ''}
                 </span>
               )}
             </div>
@@ -183,7 +184,7 @@ export function SlotCard({ slot, state, distanceKm, destCity, destDistanceKm, de
             )}
             {isPrivate && distanceKm != null && (
               <span className="text-cyan-400 text-base font-semibold">
-                📡 {formatDistance(distanceKm)}
+                📡 {distanceApprox ? '~' : ''}{formatDistance(distanceKm)}
               </span>
             )}
           </div>

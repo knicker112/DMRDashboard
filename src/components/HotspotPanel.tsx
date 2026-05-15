@@ -6,6 +6,7 @@ import { useSubscribedTGs } from '../hooks/useSubscribedTGs'
 import { useHotspotOnline } from '../hooks/useHotspotOnline'
 import { useAprs } from '../hooks/useAprs'
 import { useReverseGeo } from '../hooks/useReverseGeo'
+import { useGeocodeCity } from '../hooks/useGeocode'
 import { fetchTgName, lookupTgName, applyCustomTgNames } from '../hooks/useTalkgroups'
 import { SlotCard } from './SlotCard'
 import { SubscribedTGs } from './SubscribedTGs'
@@ -55,8 +56,23 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
 
   // Nur berechnen wenn Heimkoordinaten konfiguriert (lat=0/lng=0 = nicht gesetzt → würde ~5700 km liefern)
   const hasHomePos = config.lat !== 0 || config.lng !== 0
-  const slot1Distance = (hasHomePos && slot1Aprs) ? haversineKm(config.lat, config.lng, slot1Aprs.lat, slot1Aprs.lng) : null
-  const slot2Distance = (hasHomePos && slot2Aprs) ? haversineKm(config.lat, config.lng, slot2Aprs.lat, slot2Aprs.lng) : null
+
+  // Fallback-Stadt aus Rufzeichenliste wenn kein APRS — für Geocoding
+  const slot1FallbackCity = (!slot1Aprs && state.slot1.active && slot1Callsign)
+    ? (callsignLookup(slot1Callsign)?.city ?? null) : null
+  const slot2FallbackCity = (!slot2Aprs && state.slot2.active && slot2Callsign)
+    ? (callsignLookup(slot2Callsign)?.city ?? null) : null
+  const slot1GeoPos = useGeocodeCity(slot1FallbackCity)
+  const slot2GeoPos = useGeocodeCity(slot2FallbackCity)
+
+  // Effektive Position: APRS hat Vorrang, dann geocodierter Heimatort
+  const slot1Pos = slot1Aprs ?? slot1GeoPos
+  const slot2Pos = slot2Aprs ?? slot2GeoPos
+  const slot1Approx = !slot1Aprs && !!slot1GeoPos   // true = Entfernung ist Näherungswert
+  const slot2Approx = !slot2Aprs && !!slot2GeoPos
+
+  const slot1Distance = (hasHomePos && slot1Pos) ? haversineKm(config.lat, config.lng, slot1Pos.lat, slot1Pos.lng) : null
+  const slot2Distance = (hasHomePos && slot2Pos) ? haversineKm(config.lat, config.lng, slot2Pos.lat, slot2Pos.lng) : null
 
   // Aktueller Standort per Reverse-Geocoding aus APRS-Position (Vorrang vor RadioID-Stadt)
   const slot1GeoCity = useReverseGeo(slot1Aprs?.lat ?? null, slot1Aprs?.lng ?? null)
@@ -237,15 +253,15 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
         const d1City = slot1DestCity ?? slot1State.destRidCity ?? null
         const d2City = slot2DestCity ?? slot2State.destRidCity ?? null
         return hotspot.slots === 1 ? (
-          <SlotCard slot={1} state={slot1State} distanceKm={slot1Distance}
+          <SlotCard slot={1} state={slot1State} distanceKm={slot1Distance} distanceApprox={slot1Approx}
             destCity={d1City} destDistanceKm={slot1DestDistance} destName={slot1State.destName ?? null}
             audioRx={config.audioRx} audioTx={config.audioTx} />
         ) : (
           <div className={compact ? 'flex flex-col gap-3' : 'grid grid-cols-2 gap-6'}>
-            <SlotCard slot={1} state={slot1State} distanceKm={slot1Distance}
+            <SlotCard slot={1} state={slot1State} distanceKm={slot1Distance} distanceApprox={slot1Approx}
               destCity={d1City} destDistanceKm={slot1DestDistance} destName={slot1State.destName ?? null}
               audioRx={config.audioRx} audioTx={config.audioTx} />
-            <SlotCard slot={2} state={slot2State} distanceKm={slot2Distance}
+            <SlotCard slot={2} state={slot2State} distanceKm={slot2Distance} distanceApprox={slot2Approx}
               destCity={d2City} destDistanceKm={slot2DestDistance} destName={slot2State.destName ?? null}
               audioRx={config.audioRx} audioTx={config.audioTx} />
           </div>
