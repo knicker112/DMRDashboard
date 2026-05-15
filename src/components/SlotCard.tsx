@@ -128,14 +128,16 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
 
       {state.active ? (
         <>
-          {/* Caller → Destination */}
-          <div className="flex items-start gap-3 flex-wrap">
+          {/* Caller → Destination — Grid: beide Spalten gleich groß und bündig */}
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-3">
+
+            {/* Linke Spalte: Sender */}
             <div className="flex flex-col leading-tight">
-              <span className="text-5xl font-black text-white tracking-wide leading-none">
+              <span className="text-4xl font-black text-white tracking-wide leading-none">
                 {state.callsign}
               </span>
               {state.name && (
-                <span className="text-lg text-slate-200 mt-0.5">{state.name}</span>
+                <span className="text-base text-slate-200 mt-1">{state.name}</span>
               )}
               {(state.location || distanceKm != null) && (
                 <span className="text-sm text-slate-400 mt-0.5">
@@ -145,14 +147,18 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
                 </span>
               )}
             </div>
-            <span className="text-4xl text-slate-400 font-light self-center">→</span>
+
+            {/* Pfeil */}
+            <span className="text-3xl text-slate-400 font-light pt-1">→</span>
+
+            {/* Rechte Spalte: Ziel */}
             {isPrivate ? (
               <div className="flex flex-col leading-tight">
-                <span className="text-5xl font-black text-sky-300 tracking-wide leading-none">
+                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none">
                   {state.talkgroupName ?? `DMR ${state.talkgroup}`}
                 </span>
                 {destName && (
-                  <span className="text-lg text-slate-200 mt-0.5">{destName}</span>
+                  <span className="text-base text-slate-200 mt-1">{destName}</span>
                 )}
                 {(destCity || destDistanceKm != null) && (
                   <span className="text-sm text-slate-400 mt-0.5">
@@ -164,11 +170,11 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
               </div>
             ) : (
               <div className="flex flex-col leading-tight">
-                <span className="text-3xl font-bold text-amber-300 leading-none">
+                <span className="text-4xl font-black text-amber-300 leading-none">
                   {state.talkgroupName ?? `TG ${state.talkgroup}`}
                 </span>
                 {state.talkgroupName && state.talkgroup && (
-                  <span className="text-lg text-slate-400 mt-1">TG {state.talkgroup}</span>
+                  <span className="text-sm text-slate-400 mt-1">TG {state.talkgroup}</span>
                 )}
               </div>
             )}
