@@ -129,7 +129,7 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
       {state.active ? (
         <>
           {/* Caller → Destination */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-start gap-3 flex-wrap">
             <div className="flex flex-col leading-tight">
               <span className="text-5xl font-black text-white tracking-wide leading-none">
                 {state.callsign}
@@ -142,7 +142,7 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
                 </span>
               )}
             </div>
-            <span className="text-4xl text-slate-400 font-light">→</span>
+            <span className="text-4xl text-slate-400 font-light self-center">→</span>
             {isPrivate ? (
               <div className="flex flex-col leading-tight">
                 <span className="text-5xl font-black text-sky-300 tracking-wide leading-none">
