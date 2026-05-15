@@ -192,9 +192,9 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
     if (s1.active && (!s1.name || !s1.callsign)) void resolveUser(1, s1.callsign, s1.dmrId, s1.talkgroup)
     if (s2.active && (!s2.name || !s2.callsign)) void resolveUser(2, s2.callsign, s2.dmrId, s2.talkgroup)
 
-    if (s1.active && s1.callType === 'private' && s1.talkgroup && !s1.talkgroupName)
+    if (s1.active && s1.callType === 'private' && s1.talkgroup && needsTgName(s1.talkgroupName))
       void resolveDestination(1, s1.talkgroup)
-    if (s2.active && s2.callType === 'private' && s2.talkgroup && !s2.talkgroupName)
+    if (s2.active && s2.callType === 'private' && s2.talkgroup && needsTgName(s2.talkgroupName))
       void resolveDestination(2, s2.talkgroup)
 
     // Gruppenruf: TG-Name holen wenn null oder nur Ziffern (= rohe ID, kein echter Name)
