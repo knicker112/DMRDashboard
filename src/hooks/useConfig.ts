@@ -1,4 +1,8 @@
 import { useState, useCallback } from 'react'
+import type { AudioChannelConfig } from '../utils/audio'
+import { defaultAudioRx, defaultAudioTx } from '../utils/audio'
+
+export type { AudioChannelConfig }
 
 export interface HotspotConfig {
   id: string
@@ -12,7 +16,9 @@ export interface AppConfig {
   lat: number
   lng: number
   aprsApiKey: string
-  customTgNames: Record<string, string>  // TG-ID → Name für nicht registrierte TGs
+  customTgNames: Record<string, string>
+  audioRx: AudioChannelConfig
+  audioTx: AudioChannelConfig
 }
 
 const STORAGE_KEY = 'dmr-dashboard-config'
@@ -28,6 +34,8 @@ function envDefaults(): AppConfig | null {
     lng: parseFloat(import.meta.env.VITE_LNG ?? '10.0'),
     aprsApiKey: import.meta.env.VITE_APRS_API_KEY ?? '',
     customTgNames: {},
+    audioRx: { ...defaultAudioRx },
+    audioTx: { ...defaultAudioTx },
   }
 }
 
@@ -51,6 +59,8 @@ function migrate(raw: any): AppConfig | null {
       ...raw,
       customTgNames: raw.customTgNames ?? {},
       aprsApiKey: raw.aprsApiKey || envKey,
+      audioRx: raw.audioRx ?? { ...defaultAudioRx },
+      audioTx: raw.audioTx ?? { ...defaultAudioTx },
     } as AppConfig
   }
   return null
