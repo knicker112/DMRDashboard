@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain } = require('electron')
+const { app, BrowserWindow, shell, ipcMain, globalShortcut } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const isDev = !app.isPackaged
@@ -48,6 +48,32 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  // F11 = Vollbild ein/aus, ESC = Vollbild verlassen
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    if (input.type !== 'keyDown') return
+    if (input.key === 'F11') {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen())
+    }
+    if (input.key === 'Escape' && mainWindow.isFullScreen()) {
+      mainWindow.setFullScreen(false)
+    }
+  })
+
+  mainWindow.on('enter-full-screen', () => {
+    mainWindow?.webContents.send('fullscreen-change', true)
+  })
+  mainWindow.on('leave-full-screen', () => {
+    mainWindow?.webContents.send('fullscreen-change', false)
+  })
+
+  ipcMain.handle('toggle-fullscreen', () => {
+    mainWindow?.setFullScreen(!mainWindow.isFullScreen())
+  })
+
+  ipcMain.handle('get-fullscreen', () => {
+    return mainWindow?.isFullScreen() ?? false
   })
 }
 

@@ -7,3 +7,9 @@ contextBridge.exposeInMainWorld('electronUpdater', {
   installAndRestart:  ()   => ipcRenderer.send('install-update'),
   checkForUpdates:    ()   => ipcRenderer.invoke('check-for-updates'),
 })
+
+contextBridge.exposeInMainWorld('electronWindow', {
+  toggleFullscreen:    () => ipcRenderer.invoke('toggle-fullscreen'),
+  getFullscreen:       () => ipcRenderer.invoke('get-fullscreen'),
+  onFullscreenChange:  (cb) => ipcRenderer.on('fullscreen-change', (_, v) => cb(v)),
+})

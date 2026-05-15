@@ -7,6 +7,42 @@ import { HotspotPanel } from './components/HotspotPanel'
 import { StationMap } from './components/StationMap'
 import { SetupScreen } from './components/SetupScreen'
 
+declare global {
+  interface Window {
+    electronWindow?: {
+      toggleFullscreen: () => Promise<void>
+      getFullscreen: () => Promise<boolean>
+      onFullscreenChange: (cb: (v: boolean) => void) => void
+    }
+  }
+}
+
+function useFullscreen() {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    window.electronWindow?.getFullscreen().then(setIsFullscreen)
+    window.electronWindow?.onFullscreenChange(setIsFullscreen)
+
+    // Web-Fallback
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
+
+  function toggle() {
+    if (window.electronWindow) {
+      window.electronWindow.toggleFullscreen()
+    } else if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+    } else {
+      document.exitFullscreen()
+    }
+  }
+
+  return { isFullscreen, toggle }
+}
+
 function useClock() {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
@@ -70,6 +106,7 @@ function Dashboard({ config, onOpenSettings }: {
 }) {
   const updateInfo = useUpdateCheck()
   const electronUpdate = useElectronUpdater()
+  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
   // Fenstertitel anpassen wenn Update bereit
   useEffect(() => {
@@ -129,6 +166,14 @@ function Dashboard({ config, onOpenSettings }: {
                 v{__APP_VERSION__}
               </span>
             )}
+
+            <button
+              onClick={toggleFullscreen}
+              title={isFullscreen ? 'Vollbild verlassen (F11 / ESC)' : 'Vollbild (F11)'}
+              className="text-slate-500 hover:text-slate-300 transition-colors text-base font-mono"
+            >
+              {isFullscreen ? '⊡' : '⊞'}
+            </button>
 
             <button
               onClick={onOpenSettings}
