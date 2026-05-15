@@ -81,6 +81,48 @@ jobs:
             release/*.AppImage
             release/latest-linux*.yml
 
+  build-android:
+    needs: bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.bump.outputs.version }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Web-App bauen
+        run: npx vite build
+
+      - name: Android-Projekt erzeugen
+        run: npx cap add android
+
+      - name: Assets synchronisieren
+        run: npx cap sync android
+
+      - name: APK bauen
+        run: cd android && ./gradlew assembleDebug --no-daemon
+
+      - name: APK umbenennen
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+            "DMR-Dashboard-${{ needs.bump.outputs.version }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DMR-Dashboard-Android
+          path: DMR-Dashboard-*.apk
+
   build-windows:
     needs: bump
     runs-on: windows-latest
@@ -107,7 +149,7 @@ jobs:
             release/latest.yml
 
   release:
-    needs: [bump, build-linux, build-windows]
+    needs: [bump, build-linux, build-windows, build-android]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -122,6 +164,7 @@ jobs:
             DMR-Dashboard-Linux/latest-linux*.yml
             DMR-Dashboard-Windows/*.exe
             DMR-Dashboard-Windows/latest.yml
+            DMR-Dashboard-Android/*.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
