@@ -123,6 +123,20 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
     }
   }, [state.slot2.active]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // APRS-Standort in den Slot-State übernehmen sobald verfügbar —
+  // damit landet beim Gesprächsende der echte GPS-Ort im Verlauf statt dem Wohnort aus der PDF-Liste
+  useEffect(() => {
+    if (state.slot1.active && slot1GeoCity && slot1GeoCity !== state.slot1.location) {
+      dispatch({ type: 'SET_USER', slot: 1, name: state.slot1.name ?? '', location: slot1GeoCity })
+    }
+  }, [slot1GeoCity]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (state.slot2.active && slot2GeoCity && slot2GeoCity !== state.slot2.location) {
+      dispatch({ type: 'SET_USER', slot: 2, name: state.slot2.name ?? '', location: slot2GeoCity })
+    }
+  }, [slot2GeoCity]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Synchroner Cache-Check: Rufzeichen und TG-Namen aus Cache einsetzen ohne auf useEffect zu warten
   function resolveSync(slot: typeof state.slot1, aprsCity: string | null) {
     if (!slot.active) return slot
