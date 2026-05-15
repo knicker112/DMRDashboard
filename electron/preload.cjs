@@ -13,3 +13,8 @@ contextBridge.exposeInMainWorld('electronWindow', {
   getFullscreen:       () => ipcRenderer.invoke('get-fullscreen'),
   onFullscreenChange:  (cb) => ipcRenderer.on('fullscreen-change', (_, v) => cb(v)),
 })
+
+contextBridge.exposeInMainWorld('electronConfig', {
+  save:    (data) => ipcRenderer.invoke('config-save', data),
+  load:    ()     => ipcRenderer.invoke('config-load'),
+})

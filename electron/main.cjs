@@ -77,6 +77,20 @@ function createWindow() {
   })
 }
 
+// Config-Backup im userData-Ordner (überlebt Reinstallation)
+const CONFIG_BACKUP = path.join(app.getPath('userData'), 'config-backup.json')
+
+ipcMain.handle('config-save', (_event, data) => {
+  try { fs.writeFileSync(CONFIG_BACKUP, JSON.stringify(data), 'utf8') } catch {}
+})
+
+ipcMain.handle('config-load', () => {
+  try {
+    if (fs.existsSync(CONFIG_BACKUP)) return JSON.parse(fs.readFileSync(CONFIG_BACKUP, 'utf8'))
+  } catch {}
+  return null
+})
+
 function setupAutoUpdater() {
   if (isDev) return
 

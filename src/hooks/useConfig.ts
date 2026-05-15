@@ -23,6 +23,15 @@ export interface AppConfig {
 
 const STORAGE_KEY = 'dmr-dashboard-config'
 
+declare global {
+  interface Window {
+    electronConfig?: {
+      save: (data: unknown) => Promise<void>
+      load: () => Promise<unknown>
+    }
+  }
+}
+
 function envDefaults(): AppConfig | null {
   const hotspotId = import.meta.env.VITE_HOTSPOT_ID
   const callsign = import.meta.env.VITE_CALLSIGN
@@ -86,18 +95,36 @@ function migrateAudio(raw: any): AudioChannelConfig | null {
   }
 }
 
+async function restoreFromBackup(): Promise<void> {
+  try {
+    const raw = await window.electronConfig?.load()
+    if (!raw) return
+    const cfg = migrate(raw)
+    if (cfg) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg))
+      // Seite neu laden damit die wiederhergestellte Config aktiv wird
+      window.location.reload()
+    }
+  } catch {}
+}
+
 function loadConfig(): AppConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const cfg = migrate(JSON.parse(raw))
       if (cfg) {
-        // Migrierte Config zurückspeichern damit neue Felder (z.B. aprsApiKey aus Env) erhalten bleiben
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg))
         return cfg
       }
     }
   } catch {}
+
+  // localStorage leer oder ungültig → Backup aus Datei versuchen (Electron)
+  if (window.electronConfig) {
+    restoreFromBackup()  // async, löst Reload aus wenn Daten gefunden
+  }
+
   const defaults = envDefaults()
   if (defaults) localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults))
   return defaults
@@ -108,6 +135,7 @@ export function useConfig() {
 
   const saveConfig = useCallback((next: AppConfig) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    window.electronConfig?.save(next)  // Backup-Datei aktuell halten
     setConfigState(next)
   }, [])
 
