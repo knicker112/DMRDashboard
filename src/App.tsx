@@ -43,6 +43,25 @@ function useFullscreen() {
   return { isFullscreen, toggle }
 }
 
+function useWakeLock() {
+  useEffect(() => {
+    let lock: WakeLockSentinel | null = null
+
+    async function acquire() {
+      try { lock = await navigator.wakeLock?.request('screen') } catch {}
+    }
+
+    acquire()
+
+    const onVisibility = () => { if (document.visibilityState === 'visible') acquire() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      lock?.release()
+    }
+  }, [])
+}
+
 function useClock() {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
@@ -78,6 +97,7 @@ function ClockDisplay() {
 export default function App() {
   const { config, saveConfig } = useConfig()
   const [showSettings, setShowSettings] = useState(false)
+  useWakeLock()
 
   useEffect(() => {
     if (config?.customTgNames) applyCustomTgNames(config.customTgNames)
