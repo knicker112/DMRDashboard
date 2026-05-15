@@ -38,7 +38,8 @@
     "linux": {
       "target": "AppImage",
       "category": "HamRadio",
-      "artifactName": "DMR-Dashboard-${version}.${ext}"
+      "artifactName": "DMR-Dashboard-${version}.${ext}",
+      "executableArgs": ["--no-sandbox"]
     },
     "win": {
       "target": "nsis",

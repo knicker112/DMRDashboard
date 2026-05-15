@@ -3,6 +3,12 @@ const path = require('path')
 const fs = require('fs')
 const isDev = !app.isPackaged
 
+// Linux Mint / Ubuntu: Sandbox deaktivieren wenn Kernel keine User-Namespaces unterstützt
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox')
+  app.commandLine.appendSwitch('disable-gpu-sandbox')
+}
+
 app.setAboutPanelOptions({
   applicationName: 'DMR Dashboard',
   applicationVersion: app.getVersion(),
@@ -49,6 +55,9 @@ function setupAutoUpdater() {
   if (isDev) return
 
   const { autoUpdater } = require('electron-updater')
+
+  // Auf Linux: nur updaten wenn AppImage beschreibbar ist
+  if (process.platform === 'linux' && !autoUpdater.isUpdaterActive()) return
 
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
