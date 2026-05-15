@@ -77,8 +77,11 @@ function setupAutoUpdater() {
     autoUpdater.checkForUpdatesAndNotify()
   })
 
-  // Kurz warten bis das Fenster geladen ist, dann prüfen
-  setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 5000)
+  // Beim Start prüfen (nach 5s) und danach stündlich wiederholen
+  setTimeout(() => {
+    autoUpdater.checkForUpdatesAndNotify()
+    setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 60 * 60 * 1000)
+  }, 5000)
 }
 
 app.whenReady().then(() => {
