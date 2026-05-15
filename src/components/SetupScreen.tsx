@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import type { AppConfig, HotspotConfig } from '../hooks/useConfig'
 import type { AudioChannelConfig } from '../utils/audio'
-import { defaultAudioRx, defaultAudioTx, playAudio } from '../utils/audio'
+import { defaultAudioRx, defaultAudioTx, playAudio, AUDIO_PRESETS } from '../utils/audio'
 import { refreshCallsigns } from '../hooks/useCallsigns'
 
 interface Props {
@@ -620,31 +620,28 @@ function AudioChannel({
         <span className={`text-sm font-bold w-10 text-right ${color}`}>{Math.round(cfg.volume * 100)}%</span>
       </div>
 
-      {/* Datei-Auswahl */}
+      {/* Preset-Auswahl */}
       <div className={`flex flex-col gap-2 transition-opacity ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
-        <span className="text-slate-300 text-sm">Ton-Datei</span>
+        <span className="text-slate-300 text-sm">Ton auswählen</span>
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-400 text-xs truncate">
-            {cfg.customFileName ?? 'Standard-Ton (Piepton)'}
-          </div>
-          {cfg.customFileName && (
-            <button
-              type="button"
-              onClick={() => onRemoveFile(channel)}
-              className="text-slate-500 hover:text-red-400 transition-colors text-sm px-1"
-              title="Entfernen"
-            >
-              ✕
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shrink-0"
-            title="Datei auswählen"
+          <select
+            value={cfg.customFileName ? '__custom__' : (cfg.preset ?? 'beep')}
+            onChange={e => {
+              if (e.target.value !== '__custom__') {
+                onRemoveFile(channel)
+                setCfg(prev => ({ ...prev, preset: e.target.value }))
+              }
+            }}
+            disabled={!!cfg.customFileName}
+            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-300 text-xs disabled:opacity-60"
           >
-            📂
-          </button>
+            {AUDIO_PRESETS.map(p => (
+              <option key={p.id} value={p.id}>{p.label}</option>
+            ))}
+            {cfg.customFileName && (
+              <option value="__custom__">Eigene Datei: {cfg.customFileName}</option>
+            )}
+          </select>
           <button
             type="button"
             onClick={() => playAudio(cfg)}
@@ -654,7 +651,32 @@ function AudioChannel({
             ▶
           </button>
         </div>
-        <span className="text-slate-600 text-xs">MP3, WAV, OGG · max. 500 KB</span>
+      </div>
+
+      {/* Eigene Datei */}
+      <div className={`flex flex-col gap-1 transition-opacity ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+        <span className="text-slate-500 text-xs">EIGENE DATEI (optional)</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+          >
+            📂 Hochladen
+          </button>
+          {cfg.customFileName && (
+            <>
+              <span className="text-slate-400 text-xs truncate flex-1">{cfg.customFileName}</span>
+              <button
+                type="button"
+                onClick={() => onRemoveFile(channel)}
+                className="text-slate-500 hover:text-red-400 transition-colors text-sm"
+                title="Entfernen"
+              >✕</button>
+            </>
+          )}
+        </div>
+        <span className="text-slate-600 text-xs">MP3, WAV, OGG · max. 500 KB · überschreibt Preset</span>
         <input
           ref={fileRef}
           type="file"

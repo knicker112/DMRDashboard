@@ -52,8 +52,8 @@ function migrate(raw: any): AppConfig | null {
       lng: raw.lng ?? 0,
       aprsApiKey: raw.aprsApiKey || envKey,
       customTgNames: raw.customTgNames ?? {},
-      audioRx: raw.audioRx ?? { ...defaultAudioRx },
-      audioTx: raw.audioTx ?? { ...defaultAudioTx },
+      audioRx: migrateAudio(raw.audioRx) ?? { ...defaultAudioRx },
+      audioTx: migrateAudio(raw.audioTx) ?? { ...defaultAudioTx },
     }
   }
 
@@ -67,12 +67,23 @@ function migrate(raw: any): AppConfig | null {
       lng: raw.lng ?? 0,
       aprsApiKey: raw.aprsApiKey || envKey,
       customTgNames: raw.customTgNames ?? {},
-      audioRx: raw.audioRx ?? { ...defaultAudioRx },
-      audioTx: raw.audioTx ?? { ...defaultAudioTx },
+      audioRx: migrateAudio(raw.audioRx) ?? { ...defaultAudioRx },
+      audioTx: migrateAudio(raw.audioTx) ?? { ...defaultAudioTx },
     }
   }
 
   return null
+}
+
+function migrateAudio(raw: any): AudioChannelConfig | null {
+  if (!raw || typeof raw !== 'object') return null
+  return {
+    enabled: raw.enabled ?? true,
+    volume:  raw.volume  ?? 0.7,
+    preset:  raw.preset  ?? 'beep',
+    customDataUrl:  raw.customDataUrl,
+    customFileName: raw.customFileName,
+  }
 }
 
 function loadConfig(): AppConfig | null {
