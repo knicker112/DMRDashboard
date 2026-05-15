@@ -53,8 +53,10 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
   const slot1Aprs = useAprs(state.slot1.active ? slot1Callsign : null, config.aprsApiKey)
   const slot2Aprs = useAprs(hotspot.slots === 2 && state.slot2.active ? slot2Callsign : null, config.aprsApiKey)
 
-  const slot1Distance = slot1Aprs ? haversineKm(config.lat, config.lng, slot1Aprs.lat, slot1Aprs.lng) : null
-  const slot2Distance = slot2Aprs ? haversineKm(config.lat, config.lng, slot2Aprs.lat, slot2Aprs.lng) : null
+  // Nur berechnen wenn Heimkoordinaten konfiguriert (lat=0/lng=0 = nicht gesetzt → würde ~5700 km liefern)
+  const hasHomePos = config.lat !== 0 || config.lng !== 0
+  const slot1Distance = (hasHomePos && slot1Aprs) ? haversineKm(config.lat, config.lng, slot1Aprs.lat, slot1Aprs.lng) : null
+  const slot2Distance = (hasHomePos && slot2Aprs) ? haversineKm(config.lat, config.lng, slot2Aprs.lat, slot2Aprs.lng) : null
 
   // Aktueller Standort per Reverse-Geocoding aus APRS-Position (Vorrang vor RadioID-Stadt)
   const slot1GeoCity = useReverseGeo(slot1Aprs?.lat ?? null, slot1Aprs?.lng ?? null)
@@ -71,8 +73,8 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
   const slot2DestAprs = useAprs(slot2DestCs, config.aprsApiKey)
   const slot1DestCity = useReverseGeo(slot1DestAprs?.lat ?? null, slot1DestAprs?.lng ?? null)
   const slot2DestCity = useReverseGeo(slot2DestAprs?.lat ?? null, slot2DestAprs?.lng ?? null)
-  const slot1DestDistance = slot1DestAprs ? haversineKm(config.lat, config.lng, slot1DestAprs.lat, slot1DestAprs.lng) : null
-  const slot2DestDistance = slot2DestAprs ? haversineKm(config.lat, config.lng, slot2DestAprs.lat, slot2DestAprs.lng) : null
+  const slot1DestDistance = (hasHomePos && slot1DestAprs) ? haversineKm(config.lat, config.lng, slot1DestAprs.lat, slot1DestAprs.lng) : null
+  const slot2DestDistance = (hasHomePos && slot2DestAprs) ? haversineKm(config.lat, config.lng, slot2DestAprs.lat, slot2DestAprs.lng) : null
 
   // Letzten bekannten Ziel-Ort per Ref festhalten — slot1DestCity wird null sobald Slot inaktiv
   const slot1DestCityRef = useRef<string | null>(null)
