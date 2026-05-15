@@ -55,9 +55,8 @@
       "language": "1031"
     },
     "publish": {
-      "provider": "github",
-      "owner": "knicker112",
-      "repo": "DMRDashboard"
+      "provider": "generic",
+      "url": "https://raw.githubusercontent.com/knicker112/DMRDashboard/master/updates/"
     }
   },
   "dependencies": {
