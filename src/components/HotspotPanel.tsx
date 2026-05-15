@@ -131,7 +131,8 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
       tgName = lookupTgName(slot.talkgroup) ?? null
       // Kein TG-Name gefunden und Privatruf → RadioID-Rufzeichen (persönliche ID)
       if (!tgName && slot.callType === 'private') tgName = lookup(slot.talkgroup)?.callsign ?? null
-      if (!tgName) tgName = slot.talkgroupName
+      // Nur nicht-numerische Strings als Fallback — reine TG-IDs werden nicht als Name angezeigt
+      if (!tgName && slot.talkgroupName && !/^\d+$/.test(slot.talkgroupName)) tgName = slot.talkgroupName
     }
     const cs = slot.callsign
       ?? (slot.dmrId ? lookup(slot.dmrId)?.callsign ?? null : null)

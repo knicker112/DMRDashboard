@@ -164,7 +164,7 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
                 <span className="text-3xl font-bold text-amber-300 leading-none">
                   {state.talkgroupName ?? `TG ${state.talkgroup}`}
                 </span>
-                {state.talkgroupName && (
+                {state.talkgroupName && state.talkgroup && (
                   <span className="text-lg text-slate-400 mt-1">TG {state.talkgroup}</span>
                 )}
               </div>
