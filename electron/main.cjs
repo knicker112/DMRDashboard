@@ -65,6 +65,10 @@ function setupAutoUpdater() {
     mainWindow?.webContents.send('update-downloaded', info)
   })
 
+  autoUpdater.on('error', (err) => {
+    mainWindow?.webContents.send('update-error', err.message)
+  })
+
   ipcMain.on('install-update', () => {
     autoUpdater.quitAndInstall()
   })
