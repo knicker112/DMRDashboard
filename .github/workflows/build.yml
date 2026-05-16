@@ -123,58 +123,62 @@ jobs:
           sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
           sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
 
-      - name: Signing-Keystore einrichten (PKCS12 → JKS)
+      - name: Signing-Keystore einrichten
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+
+      - name: key.properties schreiben
+        env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.p12
-          keytool -importkeystore \
-            -srckeystore android/app/keystore.p12 \
-            -srcstoretype PKCS12 \
-            -srcstorepass "$STORE_PASSWORD" \
-            -srckeypass "$STORE_PASSWORD" \
-            -destkeystore android/app/keystore.jks \
-            -deststoretype JKS \
-            -deststorepass "$STORE_PASSWORD" \
-            -destkeypass "$STORE_PASSWORD" \
-            -noprompt
-          rm android/app/keystore.p12
+          printf 'storeFile=keystore.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/app/key.properties
+
+      - name: Release-Signing in build.gradle konfigurieren (PKCS12)
+        run: |
+          cat >> android/app/build.gradle << 'GRADLE'
+
+          def keystoreProps = new Properties()
+          def keystorePropsFile = file('key.properties')
+          if (keystorePropsFile.exists()) {
+              keystoreProps.load(new FileInputStream(keystorePropsFile))
+          }
+
+          android {
+              signingConfigs {
+                  release {
+                      keyAlias      keystoreProps['keyAlias']
+                      keyPassword   keystoreProps['keyPassword']
+                      storeFile     file(keystoreProps['storeFile'])
+                      storePassword keystoreProps['storePassword']
+                      storeType     "PKCS12"
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+          GRADLE
 
       - name: Gradlew ausführbar machen
         run: chmod +x android/gradlew
 
       - name: Signierte APK bauen (für direkten Download)
-        env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: |
           cd android && ./gradlew assembleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file="${{ github.workspace }}/android/app/keystore.jks" \
-            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
             2>&1 | tee /tmp/gradle-apk.log; exit ${PIPESTATUS[0]}
 
       - name: Gradle-Fehlerlog ausgeben
         if: failure()
-        run: |
-          echo "=== Letzten 80 Zeilen Gradle-Log ===" && tail -80 /tmp/gradle-apk.log || true
-          find android -name "*.log" -path "*/build/*" 2>/dev/null | xargs -I{} sh -c 'echo "=== {} ===" && tail -30 {}' || true
+        run: tail -80 /tmp/gradle-apk.log || true
 
       - name: Signiertes AAB bauen (für Play Store)
-        env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-        run: |
-          cd android && ./gradlew bundleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file="${{ github.workspace }}/android/app/keystore.jks" \
-            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+        run: cd android && ./gradlew bundleRelease --no-daemon
 
       - name: Artefakte umbenennen
         run: |
