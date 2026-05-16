@@ -122,8 +122,15 @@ function setupAutoUpdater() {
     autoUpdater.quitAndInstall()
   })
 
-  ipcMain.handle('check-for-updates', () => {
-    autoUpdater.checkForUpdatesAndNotify()
+  ipcMain.handle('check-for-updates', async () => {
+    try {
+      const result = await autoUpdater.checkForUpdatesAndNotify()
+      if (!result) return { hasUpdate: false }
+      const hasUpdate = result.updateInfo.version !== app.getVersion()
+      return { hasUpdate, version: result.updateInfo.version }
+    } catch {
+      return { hasUpdate: false }
+    }
   })
 
   // Beim Start prüfen (nach 5s) und danach stündlich wiederholen

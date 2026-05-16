@@ -10,6 +10,8 @@ export interface HotspotConfig {
   slots: 1 | 2
 }
 
+export type DashboardLayout = 'standard' | 'compact'
+
 export interface AppConfig {
   hotspots: HotspotConfig[]
   callsign: string
@@ -19,6 +21,7 @@ export interface AppConfig {
   customTgNames: Record<string, string>
   audioRx: AudioChannelConfig
   audioTx: AudioChannelConfig
+  layout: DashboardLayout
 }
 
 const STORAGE_KEY = 'dmr-dashboard-config'
@@ -45,6 +48,7 @@ function envDefaults(): AppConfig | null {
     customTgNames: {},
     audioRx: { ...defaultAudioRx },
     audioTx: { ...defaultAudioTx },
+    layout: 'standard' as DashboardLayout,
   }
 }
 
@@ -63,6 +67,7 @@ function migrate(raw: any): AppConfig | null {
       customTgNames: raw.customTgNames ?? {},
       audioRx: migrateAudio(raw.audioRx) ?? { ...defaultAudioRx },
       audioTx: migrateAudio(raw.audioTx) ?? { ...defaultAudioTx },
+      layout: 'standard' as DashboardLayout,
     }
   }
 
@@ -78,6 +83,7 @@ function migrate(raw: any): AppConfig | null {
       customTgNames: raw.customTgNames ?? {},
       audioRx: migrateAudio(raw.audioRx) ?? { ...defaultAudioRx },
       audioTx: migrateAudio(raw.audioTx) ?? { ...defaultAudioTx },
+      layout: (raw.layout === 'compact' ? 'compact' : 'standard') as DashboardLayout,
     }
   }
 

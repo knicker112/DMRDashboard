@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import type { AppConfig, HotspotConfig } from '../hooks/useConfig'
+import type { AppConfig, HotspotConfig, DashboardLayout } from '../hooks/useConfig'
 import type { AudioChannelConfig } from '../utils/audio'
 import { defaultAudioRx, defaultAudioTx, playAudio, AUDIO_PRESETS } from '../utils/audio'
 import { refreshCallsigns } from '../hooks/useCallsigns'
@@ -18,7 +18,7 @@ function emptyHotspot(index: number): HotspotConfig {
 
 interface TgNameRow { id: string; name: string }
 
-type Tab = 'hotspots' | 'station' | 'audio' | 'tgnames' | 'updates' | 'about'
+type Tab = 'hotspots' | 'station' | 'audio' | 'tgnames' | 'ansicht' | 'updates' | 'about'
 
 export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props) {
   const [hotspots, setHotspots] = useState<HotspotConfig[]>(
@@ -38,6 +38,7 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
     initial?.audioTx ?? { ...defaultAudioTx }
   )
   const [activeTab, setActiveTab] = useState<Tab>('hotspots')
+  const [layout, setLayout] = useState<DashboardLayout>(initial?.layout ?? 'standard')
   const [error, setError] = useState('')
 
   const rxFileRef = useRef<HTMLInputElement>(null)
@@ -45,17 +46,20 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
 
   type ActionState = 'idle' | 'loading' | 'ok' | 'error'
   const [updateCheckState, setUpdateCheckState] = useState<ActionState>('idle')
+  const [updateFound, setUpdateFound] = useState(false)
   const [callsignRefreshState, setCallsignRefreshState] = useState<ActionState>('idle')
 
   async function handleCheckForUpdates() {
     setUpdateCheckState('loading')
+    setUpdateFound(false)
     try {
-      await window.electronUpdater?.checkForUpdates?.()
+      const result = await window.electronUpdater?.checkForUpdates?.() as { hasUpdate: boolean; version?: string } | undefined
+      setUpdateFound(result?.hasUpdate ?? false)
       setUpdateCheckState('ok')
     } catch {
       setUpdateCheckState('error')
     }
-    setTimeout(() => setUpdateCheckState('idle'), 4000)
+    setTimeout(() => setUpdateCheckState('idle'), 6000)
   }
 
   async function handleRefreshCallsigns() {
@@ -164,6 +168,7 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
       customTgNames,
       audioRx,
       audioTx,
+      layout,
     })
   }
 
@@ -172,6 +177,7 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
     ['station',  'Station'],
     ['audio',    '🔊 Audio'],
     ['tgnames',  'TG-Namen'],
+    ['ansicht',  'Ansicht'],
     ['updates',  '↑ Updates'],
     ['about',    'Über'],
   ]
@@ -353,6 +359,87 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
             </div>
           )}
 
+          {/* ANSICHT */}
+          {activeTab === 'ansicht' && !showAll && (
+            <div className="flex flex-col gap-4">
+              <div className="text-slate-300 text-xs font-bold tracking-widest">DASHBOARD-ANSICHT</div>
+              <p className="text-slate-500 text-xs">Wähle wie das Dashboard dargestellt wird. Die Einstellung gilt sofort nach dem Speichern.</p>
+
+              <div className="flex flex-col gap-3">
+                {/* Standard */}
+                <button
+                  type="button"
+                  onClick={() => setLayout('standard')}
+                  className={`text-left rounded-xl border-2 p-4 transition-colors ${
+                    layout === 'standard'
+                      ? 'border-sky-500 bg-sky-900/20'
+                      : 'border-slate-700 bg-slate-900 hover:border-slate-500'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-200 text-sm font-bold">Standard</span>
+                    {layout === 'standard' && <span className="text-sky-400 text-xs font-bold">✓ Aktiv</span>}
+                  </div>
+                  <p className="text-slate-500 text-xs">Große Slotanzeigen, Verlauf mit 5 Einträgen. Hotspots werden untereinander gestapelt.</p>
+                  {/* Mini-Vorschau Standard */}
+                  <div className="mt-3 bg-slate-950 rounded-lg p-2 flex flex-col gap-1.5 pointer-events-none select-none">
+                    <div className="flex gap-1.5">
+                      <div className="flex-1 bg-slate-800 rounded p-1.5">
+                        <div className="text-slate-600 text-[8px] mb-1">SLOT 1</div>
+                        <div className="text-slate-500 text-[8px]">— Kein Betrieb —</div>
+                      </div>
+                      <div className="flex-1 bg-slate-800 rounded p-1.5">
+                        <div className="text-slate-600 text-[8px] mb-1">SLOT 2</div>
+                        <div className="text-slate-500 text-[8px]">— Kein Betrieb —</div>
+                      </div>
+                    </div>
+                    <div className="bg-slate-800 rounded p-1.5">
+                      <div className="text-slate-600 text-[8px]">HOTSPOT 2 ↓ darunter</div>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Kompakt */}
+                <button
+                  type="button"
+                  onClick={() => setLayout('compact')}
+                  className={`text-left rounded-xl border-2 p-4 transition-colors ${
+                    layout === 'compact'
+                      ? 'border-sky-500 bg-sky-900/20'
+                      : 'border-slate-700 bg-slate-900 hover:border-slate-500'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-200 text-sm font-bold">Kompakt</span>
+                    {layout === 'compact' && <span className="text-sky-400 text-xs font-bold">✓ Aktiv</span>}
+                  </div>
+                  <p className="text-slate-500 text-xs">Kleinere Slotanzeigen, Verlauf mit 3 Einträgen. Mehrere Hotspots immer nebeneinander.</p>
+                  {/* Mini-Vorschau Kompakt */}
+                  <div className="mt-3 bg-slate-950 rounded-lg p-2 flex gap-1.5 pointer-events-none select-none">
+                    <div className="flex-1 bg-slate-800 rounded p-1.5 flex flex-col gap-1">
+                      <div className="text-slate-600 text-[8px]">HOTSPOT 1</div>
+                      <div className="bg-slate-700 rounded p-1">
+                        <div style={{fontSize: '7px'}} className="text-slate-500">SLOT 1 · Kein Betrieb</div>
+                      </div>
+                      <div className="bg-slate-700 rounded p-1">
+                        <div style={{fontSize: '7px'}} className="text-slate-500">SLOT 2 · Kein Betrieb</div>
+                      </div>
+                    </div>
+                    <div className="flex-1 bg-slate-800 rounded p-1.5 flex flex-col gap-1">
+                      <div className="text-slate-600 text-[8px]">HOTSPOT 2</div>
+                      <div className="bg-slate-700 rounded p-1">
+                        <div style={{fontSize: '7px'}} className="text-slate-500">SLOT 1 · Kein Betrieb</div>
+                      </div>
+                      <div className="bg-slate-700 rounded p-1">
+                        <div style={{fontSize: '7px'}} className="text-slate-500">SLOT 2 · Kein Betrieb</div>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* UPDATES */}
           {activeTab === 'updates' && !showAll && (
             <div className="flex flex-col gap-5">
@@ -387,7 +474,7 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
                   title="Programm-Update"
                   description="Prüft ob eine neue Version des Programms verfügbar ist."
                   buttonLabel="Auf Updates prüfen"
-                  okLabel="✓ Kein Update verfügbar"
+                  okLabel={updateFound ? '↓ Update wird geladen…' : '✓ Kein Update verfügbar'}
                   state={updateCheckState}
                   disabled={!window.electronUpdater}
                   disabledHint="Nur in der installierten App verfügbar"

@@ -207,12 +207,13 @@ function Dashboard({ config, onOpenSettings, electronUpdate }: {
           </div>
         </div>
 
-        {/* Ein Panel pro Hotspot — responsiv: Hochformat=untereinander, Querformat=nebeneinander */}
+        {/* Ein Panel pro Hotspot — Layout je nach Einstellung */}
         {(() => {
           const n = config.hotspots.length
-          const grid = n === 1
-            ? ''
-            : n === 2
+          const isCompact = config.layout === 'compact'
+          const grid = isCompact
+            ? n <= 1 ? '' : n === 2 ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-3 gap-4'
+            : n <= 1 ? '' : n === 2
               ? 'grid grid-cols-1 landscape:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6'
               : 'grid grid-cols-1 landscape:grid-cols-3 md:grid-cols-3 gap-4'
           return (
@@ -223,7 +224,7 @@ function Dashboard({ config, onOpenSettings, electronUpdate }: {
                   hotspot={hotspot}
                   config={config}
                   hotspotIndex={idx}
-                  compact={n > 1}
+                  compact={isCompact}
                 />
               ))}
             </div>
