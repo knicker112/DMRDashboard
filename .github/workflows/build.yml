@@ -230,12 +230,6 @@ jobs:
         with:
           name: DMR-Dashboard-Linux
 
-      # Android nur wenn Build erfolgreich war
-      - uses: actions/download-artifact@v4
-        if: needs.build-android.result == 'success'
-        with:
-          name: DMR-Dashboard-Android
-
       # Relative Dateinamen in latest.yml auf absolute GitHub-Release-URLs umstellen
       - name: Update-Manifeste auf absolute URLs umstellen
         run: |
@@ -254,15 +248,6 @@ jobs:
             *.AppImage
             *.exe
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: softprops/action-gh-release@v2
-        if: needs.build-android.result == 'success'
-        with:
-          tag_name: v${{ needs.bump.outputs.version }}
-          files: |
-            *.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
