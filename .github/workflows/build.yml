@@ -128,61 +128,36 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
 
-      - name: key.properties schreiben
+      - name: Gradlew ausführbar machen
+        run: chmod +x android/gradlew
+
+      - name: APK bauen (unsigned)
+        run: cd android && ./gradlew assembleRelease --no-daemon
+
+      - name: APK mit apksigner signieren (PKCS12)
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: |
-          printf 'storeFile=keystore.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
-            "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/app/key.properties
+          APKSIGNER=$(find "$ANDROID_SDK_ROOT/build-tools" -name "apksigner" | sort -V | tail -1)
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          [ -f "$UNSIGNED" ] || UNSIGNED="android/app/build/outputs/apk/release/app-release.apk"
+          "$APKSIGNER" sign \
+            --ks android/app/keystore.jks \
+            --ks-type PKCS12 \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass "pass:$STORE_PASSWORD" \
+            --key-pass "pass:$KEY_PASSWORD" \
+            --out android/app/build/outputs/apk/release/app-release-signed.apk \
+            "$UNSIGNED"
 
-      - name: Release-Signing in build.gradle konfigurieren (PKCS12)
-        run: |
-          cat >> android/app/build.gradle << 'GRADLE'
-
-          def keystoreProps = new Properties()
-          def keystorePropsFile = file('key.properties')
-          if (keystorePropsFile.exists()) {
-              keystoreProps.load(new FileInputStream(keystorePropsFile))
-          }
-
-          android {
-              signingConfigs {
-                  release {
-                      keyAlias      keystoreProps['keyAlias']
-                      keyPassword   keystoreProps['keyPassword']
-                      storeFile     file(keystoreProps['storeFile'])
-                      storePassword keystoreProps['storePassword']
-                      storeType     "PKCS12"
-                  }
-              }
-              buildTypes {
-                  release {
-                      signingConfig signingConfigs.release
-                  }
-              }
-          }
-          GRADLE
-
-      - name: Gradlew ausführbar machen
-        run: chmod +x android/gradlew
-
-      - name: Signierte APK bauen (für direkten Download)
-        run: |
-          cd android && ./gradlew assembleRelease --no-daemon \
-            2>&1 | tee /tmp/gradle-apk.log; exit ${PIPESTATUS[0]}
-
-      - name: Gradle-Fehlerlog ausgeben
-        if: failure()
-        run: tail -80 /tmp/gradle-apk.log || true
-
-      - name: Signiertes AAB bauen (für Play Store)
+      - name: AAB bauen (für Play Store)
         run: cd android && ./gradlew bundleRelease --no-daemon
 
       - name: Artefakte umbenennen
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk \
+          cp android/app/build/outputs/apk/release/app-release-signed.apk \
             "DMR-Dashboard-${{ needs.bump.outputs.version }}.apk"
           cp android/app/build/outputs/bundle/release/app-release.aab \
             "DMR-Dashboard-${{ needs.bump.outputs.version }}.aab"
