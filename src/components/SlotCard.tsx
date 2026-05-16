@@ -3,6 +3,7 @@ import type { SlotState } from '../types'
 import type { AudioChannelConfig } from '../utils/audio'
 import { playAudio } from '../utils/audio'
 import { formatDistance } from '../utils/geo'
+import { callsignToCountry } from '../utils/callsignCountry'
 
 interface SlotCardProps {
   slot: 1 | 2
@@ -80,6 +81,8 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
   const c = colorScheme(state)
   const duration = useElapsed(state.startedAt)
   const directionLabel = state.direction === 'tx' ? 'TX' : state.direction === 'rx' ? 'RX' : null
+  const callerCountry = state.callsign ? callsignToCountry(state.callsign) : null
+  const destCountry = (isPrivate && state.talkgroupName) ? callsignToCountry(state.talkgroupName) : null
 
   const prevActiveRef = useRef(false)
   useEffect(() => {
@@ -133,16 +136,19 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
 
             {/* Linke Spalte: Sender */}
             <div className="flex flex-col leading-tight">
-              <span className="text-4xl font-black text-white tracking-wide leading-none">
+              <span className="text-4xl font-black text-white tracking-wide leading-none flex items-baseline gap-2">
+                {callerCountry && <span className="text-3xl">{callerCountry.flag}</span>}
                 {state.callsign}
               </span>
               {state.name && (
                 <span className="text-base text-slate-200 mt-1">{state.name}</span>
               )}
-              {(state.location || distanceKm != null) && (
+              {(state.location || callerCountry || distanceKm != null) && (
                 <span className="text-sm text-slate-400 mt-0.5">
                   {state.location ?? ''}
-                  {state.location && distanceKm != null ? ' · ' : ''}
+                  {state.location && callerCountry ? ' · ' : ''}
+                  {callerCountry ? <span className="text-slate-500">{callerCountry.name}</span> : null}
+                  {(state.location || callerCountry) && distanceKm != null ? ' · ' : ''}
                   {distanceKm != null ? `${distanceApprox ? '~' : ''}${formatDistance(distanceKm)}` : ''}
                 </span>
               )}
@@ -154,16 +160,19 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
             {/* Rechte Spalte: Ziel */}
             {isPrivate ? (
               <div className="flex flex-col leading-tight">
-                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none">
+                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none flex items-baseline gap-2">
+                  {destCountry && <span className="text-3xl">{destCountry.flag}</span>}
                   {state.talkgroupName ?? `DMR ${state.talkgroup}`}
                 </span>
                 {destName && (
                   <span className="text-base text-slate-200 mt-1">{destName}</span>
                 )}
-                {(destCity || destDistanceKm != null) && (
+                {(destCity || destCountry || destDistanceKm != null) && (
                   <span className="text-sm text-slate-400 mt-0.5">
                     {destCity ?? ''}
-                    {destCity && destDistanceKm != null ? ' · ' : ''}
+                    {destCity && destCountry ? ' · ' : ''}
+                    {destCountry ? <span className="text-slate-500">{destCountry.name}</span> : null}
+                    {(destCity || destCountry) && destDistanceKm != null ? ' · ' : ''}
                     {destDistanceKm != null ? formatDistance(destDistanceKm) : ''}
                   </span>
                 )}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { callsignToCountry } from '../utils/callsignCountry'
 import { useBrandmeister } from '../hooks/useBrandmeister'
 import { useRadioId } from '../hooks/useRadioId'
 import { useCallsigns } from '../hooks/useCallsigns'
@@ -324,23 +325,50 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
                 </div>
 
                 {/* Sender */}
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-white font-bold text-base leading-tight">{entry.callsign}</span>
-                  {entry.name && <span className="text-slate-300 text-sm leading-tight truncate">{entry.name}</span>}
-                  {entry.location && <span className="text-slate-400 text-sm leading-tight truncate">{entry.location}</span>}
-                </div>
+                {(() => {
+                  const sc = callsignToCountry(entry.callsign)
+                  return (
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-white font-bold text-base leading-tight flex items-center gap-1.5">
+                        {sc && <span className="text-sm">{sc.flag}</span>}
+                        {entry.callsign}
+                      </span>
+                      {entry.name && <span className="text-slate-300 text-sm leading-tight truncate">{entry.name}</span>}
+                      {(entry.location || sc) && (
+                        <span className="text-slate-400 text-sm leading-tight truncate">
+                          {entry.location ?? ''}
+                          {entry.location && sc ? ' · ' : ''}
+                          {sc && <span className="text-slate-500">{sc.name}</span>}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Pfeil */}
                 <span className="text-slate-400 shrink-0 text-xl">→</span>
 
                 {/* Empfänger */}
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className={`font-bold text-base leading-tight truncate ${entry.callType === 'private' ? 'text-sky-300' : 'text-amber-300'}`}>
-                    {destLabel}
-                  </span>
-                  {entry.destName && <span className="text-slate-300 text-sm leading-tight truncate">{entry.destName}</span>}
-                  {destCity && <span className="text-slate-400 text-sm leading-tight truncate">{destCity}</span>}
-                </div>
+                {(() => {
+                  const isPrivateEntry = entry.callType === 'private'
+                  const dc = (isPrivateEntry && entry.talkgroupName) ? callsignToCountry(entry.talkgroupName) : null
+                  return (
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className={`font-bold text-base leading-tight truncate flex items-center gap-1.5 ${isPrivateEntry ? 'text-sky-300' : 'text-amber-300'}`}>
+                        {dc && <span className="text-sm">{dc.flag}</span>}
+                        {destLabel}
+                      </span>
+                      {entry.destName && <span className="text-slate-300 text-sm leading-tight truncate">{entry.destName}</span>}
+                      {(destCity || dc) && (
+                        <span className="text-slate-400 text-sm leading-tight truncate">
+                          {destCity ?? ''}
+                          {destCity && dc ? ' · ' : ''}
+                          {dc && <span className="text-slate-500">{dc.name}</span>}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             )
           })}
