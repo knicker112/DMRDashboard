@@ -194,13 +194,13 @@ export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props
 
         {/* Tab-Leiste — nur im Edit-Modus */}
         {!showAll && (
-          <div className="flex gap-0 border-b border-slate-700 mb-6 -mx-1">
+          <div className="flex gap-0 border-b border-slate-700 mb-6 -mx-1 overflow-x-auto">
             {tabs.map(([tab, label]) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2.5 text-xs font-bold tracking-widest transition-colors border-b-2 -mb-px ${
+                className={`px-2.5 py-2.5 text-xs font-bold whitespace-nowrap flex-shrink-0 transition-colors border-b-2 -mb-px ${
                   activeTab === tab
                     ? 'text-sky-400 border-sky-400'
                     : 'text-slate-500 border-transparent hover:text-slate-300'
