@@ -3,11 +3,13 @@ import type { AppConfig, HotspotConfig } from '../hooks/useConfig'
 import type { AudioChannelConfig } from '../utils/audio'
 import { defaultAudioRx, defaultAudioTx, playAudio, AUDIO_PRESETS } from '../utils/audio'
 import { refreshCallsigns } from '../hooks/useCallsigns'
+import type { useElectronUpdater } from '../hooks/useElectronUpdater'
 
 interface Props {
   initial?: AppConfig
   onSave: (cfg: AppConfig) => void
   onCancel?: () => void
+  electronUpdate?: ReturnType<typeof useElectronUpdater>
 }
 
 function emptyHotspot(index: number): HotspotConfig {
@@ -18,7 +20,7 @@ interface TgNameRow { id: string; name: string }
 
 type Tab = 'hotspots' | 'station' | 'audio' | 'tgnames' | 'updates' | 'about'
 
-export function SetupScreen({ initial, onSave, onCancel }: Props) {
+export function SetupScreen({ initial, onSave, onCancel, electronUpdate }: Props) {
   const [hotspots, setHotspots] = useState<HotspotConfig[]>(
     initial?.hotspots ?? [emptyHotspot(0)]
   )
@@ -356,16 +358,42 @@ export function SetupScreen({ initial, onSave, onCancel }: Props) {
             <div className="flex flex-col gap-5">
               <div className="text-slate-300 text-xs font-bold tracking-widest">UPDATES</div>
 
-              <UpdateAction
-                title="Programm-Update"
-                description="Prüft ob eine neue Version des Programms verfügbar ist."
-                buttonLabel="Auf Updates prüfen"
-                okLabel="✓ Kein Update verfügbar"
-                state={updateCheckState}
-                disabled={!window.electronUpdater}
-                disabledHint="Nur in der installierten App verfügbar"
-                onAction={handleCheckForUpdates}
-              />
+              {electronUpdate?.ready ? (
+                <div className="bg-slate-900 rounded-xl p-4 flex flex-col gap-2">
+                  <div className="text-slate-200 text-sm font-bold">Programm-Update</div>
+                  <div className="text-slate-500 text-xs">Version {electronUpdate.version} wurde heruntergeladen.</div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => electronUpdate.install()}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+                    >
+                      Jetzt neu starten & installieren
+                    </button>
+                    <span className="text-xs font-bold text-emerald-400">↑ Update bereit</span>
+                  </div>
+                </div>
+              ) : electronUpdate?.downloading ? (
+                <div className="bg-slate-900 rounded-xl p-4 flex flex-col gap-2">
+                  <div className="text-slate-200 text-sm font-bold">Programm-Update</div>
+                  <div className="text-slate-500 text-xs">Version {electronUpdate.version} wird heruntergeladen…</div>
+                  <div className="w-full bg-slate-700 rounded-full h-1.5 mt-1">
+                    <div className="bg-sky-400 h-full rounded-full transition-all duration-300" style={{ width: `${electronUpdate.percent}%` }} />
+                  </div>
+                  <span className="text-xs text-sky-400">{Math.round(electronUpdate.percent)}%</span>
+                </div>
+              ) : (
+                <UpdateAction
+                  title="Programm-Update"
+                  description="Prüft ob eine neue Version des Programms verfügbar ist."
+                  buttonLabel="Auf Updates prüfen"
+                  okLabel="✓ Kein Update verfügbar"
+                  state={updateCheckState}
+                  disabled={!window.electronUpdater}
+                  disabledHint="Nur in der installierten App verfügbar"
+                  onAction={handleCheckForUpdates}
+                />
+              )}
 
               <UpdateAction
                 title="Rufzeichenliste"

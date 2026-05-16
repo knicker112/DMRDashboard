@@ -1,4 +1,4 @@
-import Flags from 'country-flag-icons/react/3x2'
+import * as Flags from 'country-flag-icons/react/3x2'
 import type { CountryInfo } from '../utils/callsignCountry'
 
 interface Props {

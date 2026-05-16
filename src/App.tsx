@@ -97,6 +97,7 @@ function ClockDisplay() {
 export default function App() {
   const { config, saveConfig } = useConfig()
   const [showSettings, setShowSettings] = useState(false)
+  const electronUpdate = useElectronUpdater()
   useWakeLock()
 
   useEffect(() => {
@@ -104,7 +105,7 @@ export default function App() {
   }, [config?.customTgNames])
 
   if (!config) {
-    return <SetupScreen onSave={cfg => saveConfig(cfg)} />
+    return <SetupScreen onSave={cfg => saveConfig(cfg)} electronUpdate={electronUpdate} />
   }
 
   if (showSettings) {
@@ -113,19 +114,20 @@ export default function App() {
         initial={config}
         onSave={cfg => { saveConfig(cfg); setShowSettings(false) }}
         onCancel={() => setShowSettings(false)}
+        electronUpdate={electronUpdate}
       />
     )
   }
 
-  return <Dashboard config={config} onOpenSettings={() => setShowSettings(true)} />
+  return <Dashboard config={config} onOpenSettings={() => setShowSettings(true)} electronUpdate={electronUpdate} />
 }
 
-function Dashboard({ config, onOpenSettings }: {
+function Dashboard({ config, onOpenSettings, electronUpdate }: {
   config: NonNullable<ReturnType<typeof useConfig>['config']>
   onOpenSettings: () => void
+  electronUpdate: ReturnType<typeof useElectronUpdater>
 }) {
   const updateInfo = useUpdateCheck()
-  const electronUpdate = useElectronUpdater()
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
   // Fenstertitel anpassen wenn Update bereit
