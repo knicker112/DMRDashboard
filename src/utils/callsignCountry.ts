@@ -1,13 +1,6 @@
 export interface CountryInfo {
   iso: string   // ISO 3166-1 alpha-2
   name: string  // German country name
-  flag: string  // Flag emoji
-}
-
-function isoToFlag(iso: string): string {
-  return [...iso.toUpperCase()].map(c =>
-    String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)
-  ).join('')
 }
 
 // [callsign prefix, ISO 3166-1 alpha-2, German name]
@@ -548,7 +541,7 @@ export function callsignToCountry(callsign: string): CountryInfo | null {
   if (upper.length < 2) return null
   for (const [prefix, iso, name] of SORTED) {
     if (upper.startsWith(prefix)) {
-      return { iso, name, flag: isoToFlag(iso) }
+      return { iso, name }
     }
   }
   return null

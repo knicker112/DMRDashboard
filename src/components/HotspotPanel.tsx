@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { callsignToCountry } from '../utils/callsignCountry'
+import { CountryFlag } from './CountryFlag'
 import { useBrandmeister } from '../hooks/useBrandmeister'
 import { useRadioId } from '../hooks/useRadioId'
 import { useCallsigns } from '../hooks/useCallsigns'
@@ -329,7 +330,8 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
                   const sc = callsignToCountry(entry.callsign)
                   return (
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-white font-bold text-base leading-tight">
+                      <span className="text-white font-bold text-base leading-tight flex items-center gap-1.5">
+                        {sc && <CountryFlag country={sc} className="w-5 h-auto rounded-sm shrink-0" />}
                         {entry.callsign}
                       </span>
                       {entry.name && <span className="text-slate-300 text-sm leading-tight truncate">{entry.name}</span>}
@@ -353,7 +355,8 @@ export function HotspotPanel({ hotspot, config, hotspotIndex = 0, compact = fals
                   const dc = (isPrivateEntry && entry.talkgroupName) ? callsignToCountry(entry.talkgroupName) : null
                   return (
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className={`font-bold text-base leading-tight truncate ${isPrivateEntry ? 'text-sky-300' : 'text-amber-300'}`}>
+                      <span className={`font-bold text-base leading-tight truncate flex items-center gap-1.5 ${isPrivateEntry ? 'text-sky-300' : 'text-amber-300'}`}>
+                        {dc && <CountryFlag country={dc} className="w-5 h-auto rounded-sm shrink-0" />}
                         {destLabel}
                       </span>
                       {entry.destName && <span className="text-slate-300 text-sm leading-tight truncate">{entry.destName}</span>}

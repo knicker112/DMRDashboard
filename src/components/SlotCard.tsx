@@ -4,6 +4,7 @@ import type { AudioChannelConfig } from '../utils/audio'
 import { playAudio } from '../utils/audio'
 import { formatDistance } from '../utils/geo'
 import { callsignToCountry } from '../utils/callsignCountry'
+import { CountryFlag } from './CountryFlag'
 
 interface SlotCardProps {
   slot: 1 | 2
@@ -136,7 +137,8 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
 
             {/* Linke Spalte: Sender */}
             <div className="flex flex-col leading-tight">
-              <span className="text-4xl font-black text-white tracking-wide leading-none">
+              <span className="text-4xl font-black text-white tracking-wide leading-none flex items-center gap-2">
+                {callerCountry && <CountryFlag country={callerCountry} className="w-9 h-auto rounded-sm shrink-0" />}
                 {state.callsign}
               </span>
               {state.name && (
@@ -159,7 +161,8 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
             {/* Rechte Spalte: Ziel */}
             {isPrivate ? (
               <div className="flex flex-col leading-tight">
-                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none">
+                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none flex items-center gap-2">
+                  {destCountry && <CountryFlag country={destCountry} className="w-9 h-auto rounded-sm shrink-0" />}
                   {state.talkgroupName ?? `DMR ${state.talkgroup}`}
                 </span>
                 {destName && (
