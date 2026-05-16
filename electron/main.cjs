@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain, globalShortcut } = require('electron')
+const { app, BrowserWindow, shell, ipcMain, globalShortcut, session } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const isDev = !app.isPackaged
@@ -134,6 +134,22 @@ function setupAutoUpdater() {
 }
 
 app.whenReady().then(() => {
+  // CORS-Bypass: BrandMeister API antwortet ohne Access-Control-Header wenn kein Origin gesendet wird.
+  // Electron (file://) sendet keinen Origin-Header → Response wird vom Renderer blockiert.
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls: ['https://api.brandmeister.network/*'] },
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Access-Control-Allow-Origin': ['*'],
+          'Access-Control-Allow-Methods': ['GET, OPTIONS'],
+          'Access-Control-Allow-Headers': ['Content-Type'],
+        },
+      })
+    }
+  )
+
   createWindow()
   setupAutoUpdater()
 
