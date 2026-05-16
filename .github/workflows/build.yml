@@ -76,7 +76,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DMR-Dashboard-Linux
+          name: DMR-Dashboard-Linux-v${{ needs.bump.outputs.version }}
           path: |
             release/*.AppImage
             release/latest-linux*.yml
@@ -164,7 +164,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DMR-Dashboard-Android
+          name: DMR-Dashboard-Android-v${{ needs.bump.outputs.version }}
           path: |
             DMR-Dashboard-*.apk
             DMR-Dashboard-*.aab
@@ -189,7 +189,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DMR-Dashboard-Windows
+          name: DMR-Dashboard-Windows-v${{ needs.bump.outputs.version }}
           path: |
             release/*.exe
             release/latest.yml
@@ -210,11 +210,11 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: DMR-Dashboard-Windows
+          name: DMR-Dashboard-Windows-v${{ needs.bump.outputs.version }}
 
       - uses: actions/download-artifact@v4
         with:
-          name: DMR-Dashboard-Linux
+          name: DMR-Dashboard-Linux-v${{ needs.bump.outputs.version }}
 
       # Relative Dateinamen in latest.yml auf absolute GitHub-Release-URLs umstellen
       - name: Update-Manifeste auf absolute URLs umstellen
