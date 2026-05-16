@@ -126,7 +126,12 @@ jobs:
       - name: Signing-Keystore einrichten
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          echo "Größe: $(wc -c < android/app/keystore.jks) Bytes"
+          echo "Ersten 8 Bytes (hex): $(xxd -l 8 android/app/keystore.jks)"
+          keytool -list -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" 2>&1 | head -10 || true
 
       - name: Gradlew ausführbar machen
         run: chmod +x android/gradlew
