@@ -150,7 +150,7 @@ jobs:
           [ -f "$UNSIGNED" ] || UNSIGNED="android/app/build/outputs/apk/release/app-release.apk"
           "$APKSIGNER" sign \
             --ks android/app/keystore.jks \
-            --ks-type JKS \
+            --ks-type PKCS12 \
             --ks-key-alias "$KEY_ALIAS" \
             --ks-pass "pass:$STORE_PASSWORD" \
             --key-pass "pass:$KEY_PASSWORD" \
