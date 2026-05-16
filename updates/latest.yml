@@ -1,8 +1,8 @@
-version: 1.1.31
+version: 1.1.36
 files:
-  - url: https://github.com/knicker112/DMRDashboard/releases/download/v1.1.31/DMR-Dashboard-Setup-1.1.31.exe
-    sha512: yxlmXBzL5zzKP/N5BsF6QRSYWA6jh7ieALBg8K60YWckxWE3zHjhndMoAe1jSk2GnDzre1vUo/FwJEL3gKPoiQ==
-    size: 103997079
-path: DMR-Dashboard-Setup-1.1.31.exe
-sha512: yxlmXBzL5zzKP/N5BsF6QRSYWA6jh7ieALBg8K60YWckxWE3zHjhndMoAe1jSk2GnDzre1vUo/FwJEL3gKPoiQ==
-releaseDate: '2026-05-15T17:52:16.728Z'
+  - url: https://github.com/knicker112/DMRDashboard/releases/download/v1.1.36/DMR-Dashboard-Setup-1.1.36.exe
+    sha512: r5ZuJAnYfdtl1IuIFx148xTSppFUVBRjS4uv74YLmBSX9PqW2eZ7CxkY7mGLSwuN8MV30Hq33kHKhUATNMNmtw==
+    size: 104000169
+path: DMR-Dashboard-Setup-1.1.36.exe
+sha512: r5ZuJAnYfdtl1IuIFx148xTSppFUVBRjS4uv74YLmBSX9PqW2eZ7CxkY7mGLSwuN8MV30Hq33kHKhUATNMNmtw==
+releaseDate: '2026-05-16T13:15:05.202Z'
