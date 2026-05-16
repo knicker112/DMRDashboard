@@ -192,7 +192,9 @@ jobs:
             release/latest.yml
 
   release:
+    # Läuft auch wenn build-android schlägt fehl — Windows/Linux dürfen nicht blockiert werden
     needs: [bump, build-linux, build-windows, build-android]
+    if: always() && needs.bump.result == 'success' && needs.build-linux.result == 'success' && needs.build-windows.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -204,26 +206,46 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/download-artifact@v4
+        with:
+          name: DMR-Dashboard-Windows
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: DMR-Dashboard-Linux
+
+      # Android nur wenn Build erfolgreich war
+      - uses: actions/download-artifact@v4
+        if: needs.build-android.result == 'success'
+        with:
+          name: DMR-Dashboard-Android
 
       # Relative Dateinamen in latest.yml auf absolute GitHub-Release-URLs umstellen
       - name: Update-Manifeste auf absolute URLs umstellen
         run: |
           VERSION="${{ needs.bump.outputs.version }}"
           BASE="https://github.com/knicker112/DMRDashboard/releases/download/v${VERSION}"
-          sed -i "s|url: DMR-Dashboard|url: ${BASE}/DMR-Dashboard|g" DMR-Dashboard-Windows/latest.yml
-          for f in DMR-Dashboard-Linux/latest-linux*.yml; do
+          sed -i "s|url: DMR-Dashboard|url: ${BASE}/DMR-Dashboard|g" latest.yml
+          for f in latest-linux*.yml; do
             sed -i "s|url: DMR-Dashboard|url: ${BASE}/DMR-Dashboard|g" "$f"
           done
 
-      # Release zuerst: .exe und .AppImage hochladen (unabhängig vom yml-Commit)
+      # Release: Windows + Linux immer; Android nur wenn vorhanden
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.bump.outputs.version }}
           files: |
-            DMR-Dashboard-Linux/*.AppImage
-            DMR-Dashboard-Windows/*.exe
-            DMR-Dashboard-Android/*.apk
+            *.AppImage
+            *.exe
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: softprops/action-gh-release@v2
+        if: needs.build-android.result == 'success'
+        with:
+          tag_name: v${{ needs.bump.outputs.version }}
+          files: |
+            *.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -233,8 +255,8 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           mkdir -p updates
-          cp DMR-Dashboard-Windows/latest.yml updates/latest.yml
-          cp DMR-Dashboard-Linux/latest-linux*.yml updates/
+          cp latest.yml updates/latest.yml
+          cp latest-linux*.yml updates/
           git add updates/
           git diff --staged --quiet || git commit -m "chore: update manifests v${{ needs.bump.outputs.version }} [skip ci]"
           git pull --rebase origin master

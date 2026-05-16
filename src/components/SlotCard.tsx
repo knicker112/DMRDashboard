@@ -136,8 +136,7 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
 
             {/* Linke Spalte: Sender */}
             <div className="flex flex-col leading-tight">
-              <span className="text-4xl font-black text-white tracking-wide leading-none flex items-baseline gap-2">
-                {callerCountry && <span className="text-3xl">{callerCountry.flag}</span>}
+              <span className="text-4xl font-black text-white tracking-wide leading-none">
                 {state.callsign}
               </span>
               {state.name && (
@@ -160,8 +159,7 @@ export function SlotCard({ slot, state, distanceKm, distanceApprox, destCity, de
             {/* Rechte Spalte: Ziel */}
             {isPrivate ? (
               <div className="flex flex-col leading-tight">
-                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none flex items-baseline gap-2">
-                  {destCountry && <span className="text-3xl">{destCountry.flag}</span>}
+                <span className="text-4xl font-black text-sky-300 tracking-wide leading-none">
                   {state.talkgroupName ?? `DMR ${state.talkgroup}`}
                 </span>
                 {destName && (
