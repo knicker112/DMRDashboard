@@ -96,6 +96,10 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
+      - name: Android SDK 36 und Build-Tools installieren
+        run: |
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" 2>&1 | tail -3
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -137,7 +141,14 @@ jobs:
             -Pandroid.injected.signing.store.file="${{ github.workspace }}/android/app/keystore.jks" \
             -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            2>&1 | tee /tmp/gradle-apk.log; exit ${PIPESTATUS[0]}
+
+      - name: Gradle-Fehlerlog ausgeben
+        if: failure()
+        run: |
+          echo "=== Letzten 80 Zeilen Gradle-Log ===" && tail -80 /tmp/gradle-apk.log || true
+          find android -name "*.log" -path "*/build/*" 2>/dev/null | xargs -I{} sh -c 'echo "=== {} ===" && tail -30 {}' || true
 
       - name: Signiertes AAB bauen (für Play Store)
         env:
